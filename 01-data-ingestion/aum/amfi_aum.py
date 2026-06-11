@@ -8,16 +8,19 @@ Pipeline stages
   1. CONFIG            — paths, constants, sentinel values
   2. DOWNLOADER        — Playwright scraper → raw Excel
   3. LOADER            — raw Excel → untyped DataFrame
-  4. EXTRACTOR         — AMC-level "Mutual Fund Total" rows → raw records
-  5. CLEANER           — normalise names, coerce numerics, enrich metadata
+  4. EXTRACTOR         — AMC "Mutual Fund Total" rows → raw records
+  5. CLEANER           — enrich metadata, coerce numerics
   6. VALIDATOR         — sanity checks; raises on fatal violations
   7. RUNNER            — orchestrates stages, persists outputs, prints summary
 
 Data contract
 -------------
-Only rows whose *first non-empty text cell* contains the literal phrase
-"Mutual Fund Total" (case-insensitive) are treated as AMC AUM records.
-All scheme-level rows, section headers, and blank rows are discarded.
+ONLY rows whose first column contains the substring "mutual fund total"
+(case-insensitive) are treated as AMC AUM records.  All scheme-level rows,
+section headers, AMC header rows, and blank rows are discarded.
+
+AUM is reported in Rs Lakhs in the AMFI export and is converted to Crores
+by dividing by 100.
 
 Output schema:  amc_name | aum_cr | month | ingested_at
 
@@ -27,12 +30,14 @@ A. AUM value = rightmost parseable numeric in the row.
    AMFI occasionally shifts column positions between releases; scanning
    rightward is more robust than hard-coding a column index.
 B. Any AMC whose AUM rounds to zero is dropped (data artefact, not a real fund).
-C. "Mutual Fund Total" suffix regex is greedy — handles variants like
-   "- Mutual Fund Total", "–Mutual Fund Total", etc.
+C. "Mutual Fund Total" suffix is stripped from the AMC name during extraction.
 D. Deduplication key is (amc_name, month); last occurrence wins inside a
    single export (should not happen, but guards against copy-paste rows).
 E. VALID_AMC_RANGE = (10, 60) — SEBI registered AMC count as of 2024 is ~44.
-   Pipeline warns (not fails) if the extracted count falls outside this range.
+   Pipeline warns (not fails) if the final cleaned count falls outside this range.
+F. No whitelist matching — the "Mutual Fund Total" substring is the sole
+   identification criterion, making the extractor resilient to new AMC
+   registrations and AMFI format changes.
 """
 
 from __future__ import annotations
@@ -66,20 +71,15 @@ class DropdownIdx:
 
 FINANCIAL_YEAR = "April 2025 - March 2026"
 
-# Marker text that uniquely identifies an AMC-level total row
-AMC_TOTAL_MARKER = "Mutual Fund Total"
-
-# Regex to strip the suffix from raw AMC names (assumption C above)
-_SUFFIX_RE = re.compile(
-    r"\s*[-–—]?\s*Mutual Fund Total\s*$",
-    re.IGNORECASE,
-)
-
 # Sanity-check bounds for the number of AMCs we expect (assumption E)
 VALID_AMC_RANGE: tuple[int, int] = (10, 60)
 
 # Sentinel values that indicate an empty / non-numeric cell
 _EMPTY_SENTINELS = frozenset({"", "-", "–", "—", "nan", "none", "n/a", "null"})
+
+# Compiled regexes used in extractor (defined once at module level)
+_TOTAL_SEARCH_RE = re.compile(r"mutual\s+fund\s+total", re.IGNORECASE)
+_TOTAL_STRIP_RE  = re.compile(r"\s*mutual\s+fund\s+total\s*$", re.IGNORECASE)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -100,9 +100,9 @@ def _wait_and_click_option(page: Page, dropdown_idx: int, option_text: str) -> N
     """
     page.locator(".MuiAutocomplete-root").nth(dropdown_idx).click()
     option = page.get_by_role("option", name=option_text, exact=False)
-    option.wait_for(timeout=15_0000)
+    option.wait_for(timeout=15_000)
     option.click()
-    page.wait_for_timeout(8000)
+    page.wait_for_timeout(800)
 
 
 def _pick_latest_period(page: Page) -> str:
@@ -193,8 +193,7 @@ def load_excel(path: Path) -> pd.DataFrame:
 
     Notes
     -----
-    * header=None preserves all rows including AMC total rows that may
-      appear before any clean column-header region.
+    * header=None preserves all rows including the ones that contain AMC data.
     * dtype=str prevents silent numeric coercion of AUM figures by pandas.
     * map strip is cheaper than a per-column str.strip() loop.
     """
@@ -205,7 +204,7 @@ def load_excel(path: Path) -> pd.DataFrame:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# STAGE 4 — AMC TOTAL EXTRACTOR
+# STAGE 4 — AMC EXTRACTOR
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def _parse_numeric(raw: str) -> float | None:
@@ -235,7 +234,8 @@ def _rightmost_numeric(row_values: list) -> float | None:
 
     Rationale: AMFI exports place the "Average AUM" figure in the last
     numeric column.  Column positions shift between releases (assumption A),
-    so we scan rather than hard-code.  We skip columns 0 (the AMC name cell).
+    so we scan rather than hard-code.  We skip column 0 (the AMC name cell)
+    because it is never numeric in a valid AMC row.
     """
     for cell in reversed(row_values[1:]):
         if pd.isna(cell):
@@ -250,63 +250,77 @@ def extract_amc_totals(df: pd.DataFrame) -> pd.DataFrame:
     """
     Stage 4 entry point.
 
-    Scan every row of the raw DataFrame and extract AMC-level total rows.
+    Extracts AMC-level AUM from the AMFI Average AUM Excel dump.
 
-    Identification rule
-    -------------------
-    A row qualifies if its *first non-null, non-empty string cell* contains
-    the substring "Mutual Fund Total" (case-insensitive).
+    Identification rule (assumption F — no whitelist):
+        Only rows where column 0 contains the substring "mutual fund total"
+        (case-insensitive) are treated as valid AMC records.  This naturally
+        captures every registered AMC without maintaining a static list, and
+        rejects all scheme-level rows, section headers, and AMC header rows.
 
-    This matches:
-      "SBI Mutual Fund Total"
-      "HDFC Mutual Fund Total"
-      "Axis Mutual Fund Total"
+    AUM unit conversion:
+        The AMFI export is denominated in Rs Lakhs.  Values are divided by
+        100 to produce Crores before being stored (assumption A).
 
-    And intentionally rejects:
-      "Growth" / "Dividend" (scheme-level rows)
-      "Equity" / "Debt"     (category headers)
-      Completely blank rows
+    Name cleaning (performed inside the extractor so clean_amc_totals
+    receives ready-to-use names):
+        • Strip trailing "Mutual Fund Total" substring
+        • Collapse internal whitespace
+        • Title-case the result
 
-    AUM extraction
-    --------------
-    Uses _rightmost_numeric() — see assumption A in module docstring.
+    Safety checks:
+        • Drop rows with missing AUM
+        • Drop rows with zero / near-zero AUM (assumption B)
+        • Deduplicate on amc_name_raw (keep last; assumption D)
 
     Returns
     -------
     pd.DataFrame with columns: [amc_name_raw, aum_cr]
-    Each row is a single AMC total record, undeduped, uncleaned.
+    Each row is a single AMC record.
     """
     records: list[dict] = []
-    marker_lower = AMC_TOTAL_MARKER.lower()
 
     for _, row in df.iterrows():
         row_list = row.tolist()
 
-        # Find the first cell that is a non-empty string
-        first_text: str | None = None
-        for cell in row_list:
-            if pd.notna(cell) and str(cell).strip():
-                first_text = str(cell).strip()
-                break
+        first_col_raw = row_list[0] if row_list else None
+        if pd.isna(first_col_raw):
+            continue
+        first_col = str(first_col_raw).strip()
 
-        if first_text is None:
-            continue  # blank row — skip
-
-        if marker_lower not in first_text.lower():
-            continue  # not an AMC total row — skip
-
-        aum_value = _rightmost_numeric(row_list)
-
-        # Drop rows where the AUM is missing or effectively zero (assumption B)
-        if aum_value is None or abs(aum_value) < 1e-9:
+        # Core identification: "Mutual Fund Total" substring only (assumption F)
+        if not _TOTAL_SEARCH_RE.search(first_col):
             continue
 
-        records.append({"amc_name_raw": first_text, "aum_cr": aum_value})
+        aum_lakhs = _rightmost_numeric(row_list)
+
+        # Drop missing or near-zero AUM (assumption B)
+        if aum_lakhs is None or abs(aum_lakhs) < 1e-9:
+            continue
+
+        # Clean AMC name inline
+        amc_name = _TOTAL_STRIP_RE.sub("", first_col).strip()
+        amc_name = re.sub(r"\s+", " ", amc_name).title()
+
+        records.append({
+            "amc_name_raw": amc_name,
+            "aum_cr": aum_lakhs / 100,   # Rs Lakhs → Crores
+        })
 
     if not records:
         return pd.DataFrame(columns=["amc_name_raw", "aum_cr"])
 
-    return pd.DataFrame(records)
+    result = pd.DataFrame(records)
+
+    # Safety: drop empty names, null AUM, near-zero AUM
+    result = result[result["amc_name_raw"].str.len() > 0]
+    result = result[result["aum_cr"].notna()]
+    result = result[result["aum_cr"].abs() >= 1e-9]
+
+    # Deduplicate on AMC name — keep last occurrence (assumption D)
+    result = result.drop_duplicates(subset=["amc_name_raw"], keep="last")
+
+    return result.reset_index(drop=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -321,8 +335,8 @@ def clean_amc_totals(raw: pd.DataFrame, period_text: str) -> pd.DataFrame:
 
     Transformations
     ---------------
-    amc_name    Strip "Mutual Fund Total" suffix (assumption C), collapse
-                internal whitespace, title-case for consistency.
+    amc_name    Taken directly from amc_name_raw — already cleaned and
+                title-cased by the extractor.
     aum_cr      Already float from extractor; cast explicitly to float64.
     month       Period label from the AMFI dropdown.
     ingested_at UTC ISO-8601 timestamp for this pipeline run.
@@ -338,16 +352,10 @@ def clean_amc_totals(raw: pd.DataFrame, period_text: str) -> pd.DataFrame:
 
     df = raw.copy()
 
-    df["amc_name"] = (
-        df["amc_name_raw"]
-        .str.replace(_SUFFIX_RE, "", regex=True)   # drop "Mutual Fund Total"
-        .str.strip()
-        .str.replace(r"\s+", " ", regex=True)       # collapse internal spaces
-        .str.title()                                  # consistent casing
-    )
-
-    df["aum_cr"]     = df["aum_cr"].astype("float64")
-    df["month"]      = period_text.strip()
+    # Name is already cleaned by the extractor — pass through directly
+    df["amc_name"]    = df["amc_name_raw"]
+    df["aum_cr"]      = df["aum_cr"].astype("float64")
+    df["month"]       = period_text.strip()
     df["ingested_at"] = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Drop rows whose name resolved to empty after stripping
@@ -408,7 +416,7 @@ def validate(df: pd.DataFrame) -> None:
     lo, hi = VALID_AMC_RANGE
     if not (lo <= n <= hi):
         warnings.append(
-            f"Extracted {n} AMC rows; expected between {lo} and {hi}. "
+            f"Final AMC count {n} is outside expected range [{lo}, {hi}]. "
             "Verify the AMFI export format has not changed."
         )
 
@@ -464,22 +472,24 @@ def run() -> None:
     raw_df = load_excel(result.raw_path)
 
     # ── Stage 4: Extract ─────────────────────────────────────────────────────
-    print("\n[Stage 4] Extracting AMC totals …")
+    print("\n[Stage 4] Extracting AMC rows (Mutual Fund Total) …")
     extracted = extract_amc_totals(raw_df)
 
     if extracted.empty:
         print(
-            "ERROR: No AMC total rows found. "
+            "ERROR: No AMC rows found. "
             "The Excel format may have changed — inspect the raw file.",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    print(f"  [extractor]  Candidate rows : {len(extracted)}")
+    print(f"  [extractor]  Raw extracted rows (pre-cleaning): {len(extracted)}")
 
     # ── Stage 5: Clean ───────────────────────────────────────────────────────
     print("\n[Stage 5] Cleaning & normalising …")
     clean_df = clean_amc_totals(extracted, result.period_text)
+
+    print(f"  [cleaner]    Final AMC rows (post-cleaning): {len(clean_df)}")
 
     # ── Stage 6: Validate ────────────────────────────────────────────────────
     print("\n[Stage 6] Validating …")
@@ -521,4 +531,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-
