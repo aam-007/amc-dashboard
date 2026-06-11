@@ -1,0 +1,58 @@
+amc-dashboard/
+│
+├── README.md
+│
+├── docs/
+│   ├── project_plan.md
+│   ├── data_sources.md
+│   ├── schema.md
+│   └── revenue_methodology.md
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── exports/
+│
+├── 01-data-ingestion/
+│   ├── fund_master/
+│   ├── nav/
+│   ├── aum/
+│   ├── expense_ratio/
+│   └── financials/
+│
+├── 02-data-warehouse/
+│   ├── create_schema.py
+│   ├── load_data.py
+│   └── warehouse.db
+│
+├── 03-amc-analytics/
+│   ├── flows/
+│   ├── market_share/
+│   ├── rankings/
+│   └── categories/
+│
+├── 04-revenue-model/
+│   ├── calculate_yield.py
+│   ├── estimate_revenue.py
+│   └── validate_revenue.py
+│
+├── 05-forecasting/
+│   ├── forecast_aum.py
+│   ├── forecast_revenue.py
+│   ├── bull_case.py
+│   ├── base_case.py
+│   └── bear_case.py
+│
+├── 06-dashboard/
+│   ├── index.html
+│   ├── css/
+│   ├── js/
+│   └── assets/
+│
+├── 07-automation/
+│   ├── run_pipeline.py
+│   └── export_data.py
+│
+├── tests/
+│
+└── notebooks/
