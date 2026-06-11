@@ -1,5 +1,5 @@
 """
-amfi_aum.py
+amfi_aum_pipeline.py
 ====================
 Production-grade AMFI AUM ingestion pipeline for the AMC Dashboard platform.
 
