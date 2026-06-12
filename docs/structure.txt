@@ -18,7 +18,7 @@ amc-dashboard/
 │   ├── nav/
 │   ├── aum/
 │   ├── expense_ratio/
-│   └── financials/
+│   └── financials (deffered) /
 │
 ├── 02-data-warehouse/
 │   ├── create_schema.py
