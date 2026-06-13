@@ -29,7 +29,7 @@ amc-dashboard/
 │   ├── flows/
 │   ├── market_share/
 │   ├── rankings/
-│   └── categories/
+│   
 │
 ├── 04-revenue-model/
 │   ├── calculate_yield.py
