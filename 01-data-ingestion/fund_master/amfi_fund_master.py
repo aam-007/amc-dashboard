@@ -13,6 +13,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
@@ -24,7 +25,6 @@ import requests
 NAVALL_URL = "https://portal.amfiindia.com/spages/NAVAll.txt"
 RAW_DIR = Path("data/raw/fund_master")
 PROCESSED_DIR = Path("data/processed/fund_master")
-PROCESSED_FILENAME = "fund_master_latest.csv"
 
 REQUEST_TIMEOUT = 60          # seconds
 REQUEST_RETRIES = 3
@@ -138,7 +138,7 @@ def download_navall(
 
 def save_raw_file(content: str, raw_dir: Path = RAW_DIR) -> Path:
     """
-    Persist the raw downloaded content to disk with a datestamp suffix.
+    Persist the raw downloaded content to disk with a datestamp + timestamp suffix.
 
     Parameters
     ----------
@@ -153,8 +153,8 @@ def save_raw_file(content: str, raw_dir: Path = RAW_DIR) -> Path:
         Full path of the saved file.
     """
     raw_dir.mkdir(parents=True, exist_ok=True)
-    datestamp = datetime.today().strftime("%Y%m%d")
-    path = raw_dir / f"NAVAll_{datestamp}.txt"
+    timestamp = datetime.now(tz=ZoneInfo("Asia/Kolkata")).strftime("%Y%m%d_%H%M%S")
+    path = raw_dir / f"NAVAll_{timestamp}.txt"
     path.write_text(content, encoding="utf-8")
     log.info("Raw file saved → %s", path)
     return path
@@ -407,7 +407,7 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 def save_processed(df: pd.DataFrame, processed_dir: Path = PROCESSED_DIR) -> Path:
     """
-    Write the cleaned DataFrame to CSV.
+    Write the cleaned DataFrame to CSV with a date+timestamp in the filename.
 
     Parameters
     ----------
@@ -422,7 +422,9 @@ def save_processed(df: pd.DataFrame, processed_dir: Path = PROCESSED_DIR) -> Pat
         Full path of the written CSV.
     """
     processed_dir.mkdir(parents=True, exist_ok=True)
-    path = processed_dir / PROCESSED_FILENAME
+    timestamp = datetime.now(tz=ZoneInfo("Asia/Kolkata")).strftime("%Y%m%d_%H%M%S")
+    filename = f"fund_master_{timestamp}.csv"
+    path = processed_dir / filename
     df.to_csv(path, index=False)
     log.info(
         "Processed file saved → %s  (%d rows × %d cols)",

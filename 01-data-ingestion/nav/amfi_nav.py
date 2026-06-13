@@ -29,6 +29,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
@@ -114,8 +115,8 @@ def save_raw_file(content: str, raw_dir: Path = RAW_DIR) -> Path:
     """
     Persist the downloaded file verbatim to the raw layer.
 
-    The file is stamped with today's UTC date to support idempotent reruns:
-    ``NAVAll_YYYYMMDD.txt``
+    The file is stamped with UTC date and time (down to seconds) to support
+    multiple runs per day: ``NAVAll_YYYYMMDD_HHMMSS.txt``
 
     Parameters
     ----------
@@ -130,8 +131,8 @@ def save_raw_file(content: str, raw_dir: Path = RAW_DIR) -> Path:
         Absolute path of the saved file.
     """
     raw_dir.mkdir(parents=True, exist_ok=True)
-    today = datetime.now(tz=timezone.utc).strftime("%Y%m%d")
-    dest = raw_dir / f"NAVAll_{today}.txt"
+    timestamp = datetime.now(tz=ZoneInfo("Asia/Kolkata")).strftime("%Y%m%d_%H%M%S")
+    dest = raw_dir / f"NAVAll_{timestamp}.txt"
 
     dest.write_text(content, encoding="utf-8")
     log.info("Raw file saved → %s", dest)
@@ -362,9 +363,9 @@ def save_processed(
     """
     Write the cleaned DataFrame to the processed layer in Parquet and CSV.
 
-    Files are stamped with today's UTC date:
-    ``nav_snapshot_YYYYMMDD.parquet``
-    ``nav_snapshot_YYYYMMDD.csv``
+    Files are stamped with UTC date and time (down to seconds):
+    ``nav_snapshot_YYYYMMDD_HHMMSS.parquet``
+    ``nav_snapshot_YYYYMMDD_HHMMSS.csv``
 
     Parquet is the primary analytical format.
 
@@ -381,10 +382,10 @@ def save_processed(
         (parquet_path, csv_path) of the saved files.
     """
     processed_dir.mkdir(parents=True, exist_ok=True)
-    today = datetime.now(tz=timezone.utc).strftime("%Y%m%d")
+    timestamp = datetime.now(tz=ZoneInfo("Asia/Kolkata")).strftime("%Y%m%d_%H%M%S")
 
-    parquet_path = processed_dir / f"nav_snapshot_{today}.parquet"
-    csv_path = processed_dir / f"nav_snapshot_{today}.csv"
+    parquet_path = processed_dir / f"nav_snapshot_{timestamp}.parquet"
+    csv_path = processed_dir / f"nav_snapshot_{timestamp}.csv"
 
     df.to_parquet(parquet_path, index=False, engine="pyarrow")
     log.info("Parquet saved → %s", parquet_path)
