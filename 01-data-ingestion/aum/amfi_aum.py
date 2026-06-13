@@ -83,11 +83,9 @@ class DropdownIdx:
     DATA   = 0   # "Schemewise" / "Fundwise"
     TYPE   = 1   # "Typewise" / "Overallwise"
     AMC    = 2   # "ALL" or specific AMC
-    FY     = 3   # Financial year e.g. "April 2025 - March 2026"
+    FY     = 3   # Financial year — always pick the *first* (latest) option
     PERIOD = 4   # Month/quarter — always pick the *first* (latest) option
 
-
-FINANCIAL_YEAR = "April 2025 - March 2026"
 
 # Sanity-check bounds for AMC count (assumption E).
 # ~51 registered AMCs as of June 2025; upper bound left loose for new entries.
@@ -212,6 +210,22 @@ def _pick_latest_period(page: Page) -> str:
     return period_text
 
 
+def _pick_latest_fy(page: Page) -> None:
+    """
+    Open the financial-year dropdown and select the topmost (most recent) entry.
+
+    The FY label is not needed downstream so nothing is returned; only the
+    side-effect of selecting the option matters.
+    """
+    page.locator(".MuiAutocomplete-root").nth(DropdownIdx.FY).click()
+    first_option = page.locator('[role="option"]').first
+    first_option.wait_for(timeout=15_000)
+    fy_text = first_option.inner_text().strip()
+    print(f"  [downloader] Latest FY     : {fy_text}")
+    first_option.click()
+    page.wait_for_timeout(800)
+
+
 def download_aum_excel() -> DownloadResult:
     """
     Stage 2 entry point.
@@ -244,7 +258,7 @@ def download_aum_excel() -> DownloadResult:
         _wait_and_click_option(page, DropdownIdx.DATA,  "Schemewise")
         _wait_and_click_option(page, DropdownIdx.TYPE,  "Typewise")
         _wait_and_click_option(page, DropdownIdx.AMC,   "ALL")
-        _wait_and_click_option(page, DropdownIdx.FY,    FINANCIAL_YEAR)
+        _pick_latest_fy(page)
 
         # Wait for the period dropdown to repopulate after FY selection
         page.wait_for_timeout(5_000)
