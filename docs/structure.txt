@@ -32,7 +32,7 @@ amc-dashboard/
 │   
 │
 ├── 04-revenue-model/
-│   ├── calculate_yield.py
+│   ├── calculate_yield.py (deffered)
 │   ├── estimate_revenue.py
 │   └── validate_revenue.py
 │

@@ -15,7 +15,7 @@ The dashboard is intended to be a read-only analytical platform with daily data 
 ## Primary Objectives
 
 * Track AMC-level AUM across the Indian mutual fund industry.
-* Monitor fund-level and AMC-level inflows and outflows.
+* Monitor fund-level (deffered) and AMC-level inflows and outflows.
 * Calculate market share and market share changes.
 * Estimate AMC revenue using publicly available information.
 * Forecast quarterly and annual revenue.
@@ -48,7 +48,7 @@ The platform should be capable of answering:
 * What is the current AUM of each AMC?
 * What are the estimated revenues of each AMC?
 
-### Fund Level
+### Fund Level (deffered)
 
 * Which schemes are attracting the highest inflows?
 * Which schemes are seeing significant redemptions?

@@ -14,7 +14,7 @@ Fund Master
       ├── Daily NAV
       ├── Daily AUM
       ├── Expense Ratio
-      └── Flow Metrics
+      └── Flow Metrics (deffered)
 
 AMC Financials
       │
