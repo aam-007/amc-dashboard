@@ -1,0 +1,78 @@
+========================================================================
+AMC DASHBOARD PIPELINE — RUN LOG
+========================================================================
+Pipeline Status : FAILED
+Started         : 2026-06-15 13:06:35
+Ended           : 2026-06-15 13:06:38
+Total Runtime   : 00:00:03
+Stages Executed : 1
+Stages Passed   : 0
+Stages Failed   : 1
+
+========================================================================
+STAGE 01 — AUM INGESTION
+Status   : FAILED
+Script   : 01-data-ingestion/aum/amfi_aum.py
+Started  : 13:06:35
+Ended    : 13:06:38
+Duration : 00:00:03
+
+── STDOUT ──
+
+══════════════════════════════════════════════════════════
+  AMFI AUM Ingestion Pipeline
+══════════════════════════════════════════════════════════
+
+  [downloader] Opening https://www.amfiindia.com/aum-data/average-aum …
+  [downloader] Applying filters …
+
+── STDERR ──
+Traceback (most recent call last):
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\01-data-ingestion\aum\amfi_aum.py", line 695, in <module>
+    run()
+    ~~~^^
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\01-data-ingestion\aum\amfi_aum.py", line 630, in run
+    result = download_aum_excel()
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\01-data-ingestion\aum\amfi_aum.py", line 259, in download_aum_excel
+    _wait_and_click_option(page, DropdownIdx.TYPE,  "Typewise")
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\01-data-ingestion\aum\amfi_aum.py", line 194, in _wait_and_click_option
+    option.click()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\sync_api\_generated.py", line 17422, in click
+    self._sync(
+    ~~~~~~~~~~^
+        self._impl_obj.click(
+        ^^^^^^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+        )
+        ^
+    )
+    ^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_sync_base.py", line 115, in _sync
+    return task.result()
+           ~~~~~~~~~~~^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_locator.py", line 163, in click
+    return await self._frame._click(self._selector, strict=True, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_frame.py", line 569, in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_connection.py", line 69, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\site-packages\playwright\_impl\_connection.py", line 559, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TargetClosedError: Locator.click: Target page, context or browser has been closed
+Call log:
+  - waiting for get_by_role("option", name="Typewise")
+    - locator resolved to <li tabindex="-1" role="option" data-option-index="1" aria-disabled="false" aria-selected="false" id=":Rahpuuuanb:-option-1" class="MuiAutocomplete-option">Typewise</li>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+
+
+========================================================================
+END OF LOG
+========================================================================

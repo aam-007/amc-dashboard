@@ -21,6 +21,7 @@ import signal
 import subprocess
 import sys
 import threading
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
@@ -287,6 +288,9 @@ class PipelineWorker(QThread):
     """
     message_ready = Signal(object)   # PipelineMessage
 
+    # Maximum seconds to wait for a single stage (adjust as needed)
+    STAGE_TIMEOUT_SECONDS = 3600  # 1 hour
+
     def __init__(
         self,
         stages: list[PipelineStage],
@@ -341,6 +345,14 @@ class PipelineWorker(QThread):
             self._emit("pipeline_completed")
 
     # ── Stage execution ────────────────────────────────────────────────────
+    #
+    # ** FIXED VERSION **
+    #  - Reads stdout and stderr concurrently via a daemon thread to prevent
+    #    pipe-buffer deadlocks.
+    #  - Redirects stdin to DEVNULL to avoid any input‑waiting hangs.
+    #  - Adds a timeout on proc.wait() and a kill on TimeoutExpired.
+    #  - Ensures proper cleanup even on errors.
+    # ────────────────────────────────────────────────────────────────────────
 
     def _run_stage(self, stage: PipelineStage) -> StageResult:
         script  = PROJECT_ROOT / stage.script_path
@@ -363,10 +375,12 @@ class PipelineWorker(QThread):
                 ended_at=ended,
             )
 
+        proc = None
         try:
             proc = subprocess.Popen(
                 [sys.executable, str(script)],
                 cwd=str(PROJECT_ROOT),
+                stdin=subprocess.DEVNULL,          # prevent any stdin hang
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -376,18 +390,30 @@ class PipelineWorker(QThread):
                 env={
                     **os.environ,
                     "PYTHONUNBUFFERED": "1",
-                    # Without this, a child whose stdout is a pipe (not a
-                    # real console) falls back to the Windows ANSI codepage
-                    # (cp1252), which can't encode box-drawing separators
-                    # like "═"/"─"/"━" and crashes with UnicodeEncodeError.
                     "PYTHONIOENCODING": "utf-8",
                 },
-                # Cross-platform process group for reliable kill
                 **self._popen_kwargs(),
             )
             self._current_proc = proc
 
-            # Stream stdout
+            # ── Daemon thread to drain stderr concurrently ────────────────
+            def read_stderr():
+                try:
+                    for line in proc.stderr:
+                        if self._kill_requested.is_set():
+                            break
+                        line = line.rstrip()
+                        stderr_lines.append(line)
+                        if self.verbose and line.strip():
+                            self._emit("log_line", (stage.label, line, "stderr"))
+                except ValueError:
+                    # pipe already closed
+                    pass
+
+            stderr_thread = threading.Thread(target=read_stderr, daemon=True)
+            stderr_thread.start()
+
+            # ── Main thread: read stdout ──────────────────────────────────
             for line in proc.stdout:
                 if self._kill_requested.is_set():
                     break
@@ -396,18 +422,25 @@ class PipelineWorker(QThread):
                 if self.verbose or line.startswith(("PASS", "FAIL", "[", "=")):
                     self._emit("log_line", (stage.label, line, "stdout"))
 
+            # Close stdout – child will receive SIGPIPE/EPIPE if it tries to
+            # write further. This is safe because we have fully consumed it.
             proc.stdout.close()
 
-            # Drain stderr
-            for line in proc.stderr:
-                line = line.rstrip()
-                stderr_lines.append(line)
-                if self.verbose and line.strip():
-                    self._emit("log_line", (stage.label, line, "stderr"))
-            proc.stderr.close()
+            # Wait for stderr drain to finish (with a guard timeout)
+            stderr_thread.join(timeout=5.0)
+            if not proc.stderr.closed:
+                proc.stderr.close()
 
-            proc.wait()
-            self._current_proc = None
+            # Wait for the process itself, with a safety timeout
+            try:
+                proc.wait(timeout=self.STAGE_TIMEOUT_SECONDS)
+            except subprocess.TimeoutExpired:
+                # Process did not finish in time; treat as killed
+                self._emit("log_line", (stage.label,
+                    f"Stage timed out after {self.STAGE_TIMEOUT_SECONDS}s", "stderr"))
+                self._terminate_current_process()
+                proc.wait()  # final reaping
+                self._current_proc = None
 
         except Exception as exc:
             stderr_lines.append(str(exc))

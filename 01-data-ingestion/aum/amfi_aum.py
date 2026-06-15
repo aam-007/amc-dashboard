@@ -241,7 +241,7 @@ def download_aum_excel() -> DownloadResult:
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
-            headless=False,
+            headless=True,
             args=["--disable-blink-features=AutomationControlled"],
         )
         context = browser.new_context(

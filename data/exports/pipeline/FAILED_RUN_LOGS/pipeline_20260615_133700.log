@@ -1,0 +1,34 @@
+========================================================================
+AMC DASHBOARD PIPELINE — RUN LOG
+========================================================================
+Pipeline Status : KILLED
+Started         : 2026-06-15 13:37:00
+Ended           : 2026-06-15 13:37:03
+Total Runtime   : 00:00:02
+Stages Executed : 1
+Stages Passed   : 0
+Stages Failed   : 0
+
+========================================================================
+STAGE 01 — AUM INGESTION
+Status   : KILLED
+Script   : 01-data-ingestion/aum/amfi_aum.py
+Started  : 13:37:00
+Ended    : 13:37:03
+Duration : 00:00:02
+
+── STDOUT ──
+
+══════════════════════════════════════════════════════════
+  AMFI AUM Ingestion Pipeline
+══════════════════════════════════════════════════════════
+
+  [downloader] Opening https://www.amfiindia.com/aum-data/average-aum …
+  [downloader] Applying filters …
+
+── STDERR ──
+(no output)
+
+========================================================================
+END OF LOG
+========================================================================
