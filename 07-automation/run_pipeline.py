@@ -111,13 +111,10 @@ PIPELINE_STAGES: list[PipelineStage] = [
     PipelineStage(7,  "AMC Rankings",             "03-amc-analytics/rankings/ranking_amcs.py"),
     PipelineStage(8,  "Revenue Estimation",       "04-revenue-model/estimate_revenue.py"),
     PipelineStage(9,  "Revenue Validation",       "04-revenue-model/validate_revenue.py"),
-    # NOTE: per the attached repo tree, the folder on disk is currently named
-    # "05-forcasting" (missing the "e"). Pointing at that name so the
-    # pipeline actually runs against the repo as it exists today — but you
-    # likely want to rename the folder to "05-forecasting" and flip these two
-    # paths back, since this typo will trip someone up again later.
     PipelineStage(10, "AUM Forecast",             "05-forcasting/forecast_aum.py"),
     PipelineStage(11, "Revenue Forecast",         "05-forcasting/forecast_revenue.py"),
+    # ── NEW: Push latest results to GitHub ────────────────────────────────
+    PipelineStage(12, "Push to GitHub",           "07-automation/push_to_github.py"),
 ]
 
 
