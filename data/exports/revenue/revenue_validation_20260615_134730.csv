@@ -1,0 +1,16 @@
+check_name,status,details
+FILE EXISTS,PASS,Found: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\revenue\amc_revenue_latest.csv
+FILE READABLE,PASS,Loaded 51 rows
+REQUIRED COLUMNS,PASS,All required columns present
+DATASET NOT EMPTY,PASS,51 rows present
+NO DUPLICATE AMC NAMES,PASS,No duplicate AMC names
+RANK SEQUENCE VALID,PASS,Valid sequence 1–51
+POSITIVE AUM,PASS,All AUM values are positive
+POSITIVE REVENUE,PASS,All revenue values are positive
+VALID YIELD RANGE,PASS,"All yields within [0.05%, 2.0%]"
+REVENUE FORMULA RECONCILIATION,PASS,All rows reconcile within ±0.01
+REVENUE SORT ORDER,PASS,Sorted descending by estimated_revenue_cr
+RANK VS REVENUE CONSISTENCY,PASS,Rank is consistent with revenue order
+INDUSTRY TOTALS,PASS,"Total AUM: ₹8,153,966.49 Cr | Total Revenue: ₹61,154.74 Cr"
+TOP AMC SANITY CHECK,PASS,"Top AMC: 'SBI' | Revenue: ₹9,360.02 Cr"
+NULL VALUE CHECK,PASS,No nulls in required columns
