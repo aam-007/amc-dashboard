@@ -51,8 +51,3 @@ amc-dashboard/
 │
 ├── 07-automation/
 │   ├── run_pipeline.py
-│   └── export_data.py
-│
-├── tests/
-│
-└── notebooks/

@@ -190,7 +190,7 @@ def _wait_and_click_option(page: Page, dropdown_idx: int, option_text: str) -> N
     """
     page.locator(".MuiAutocomplete-root").nth(dropdown_idx).click()
     option = page.get_by_role("option", name=option_text, exact=False)
-    option.wait_for(timeout=15_000)
+    option.wait_for(timeout=15_0000)
     option.click()
     page.wait_for_timeout(800)
 
@@ -202,7 +202,7 @@ def _pick_latest_period(page: Page) -> str:
     """
     page.locator(".MuiAutocomplete-root").nth(DropdownIdx.PERIOD).click()
     first_option = page.locator('[role="option"]').first
-    first_option.wait_for(timeout=15_000)
+    first_option.wait_for(timeout=15_0000)
     period_text = first_option.inner_text().strip()
     print(f"  [downloader] Latest period : {period_text}")
     first_option.click()
@@ -219,7 +219,7 @@ def _pick_latest_fy(page: Page) -> None:
     """
     page.locator(".MuiAutocomplete-root").nth(DropdownIdx.FY).click()
     first_option = page.locator('[role="option"]').first
-    first_option.wait_for(timeout=15_000)
+    first_option.wait_for(timeout=15_0000)
     fy_text = first_option.inner_text().strip()
     print(f"  [downloader] Latest FY     : {fy_text}")
     first_option.click()
@@ -241,7 +241,7 @@ def download_aum_excel() -> DownloadResult:
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
-            headless=True,
+            headless=False,
             args=["--disable-blink-features=AutomationControlled"],
         )
         context = browser.new_context(
