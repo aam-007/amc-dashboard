@@ -1141,6 +1141,15 @@ async function fetchCSV(relativePath) {
   return data;
 }
 
+/* Helper to normalise scenario string to 'base', 'bull', 'bear' */
+function normaliseScenario(raw) {
+  const s = raw.trim().toLowerCase();
+  if (s.includes('base')) return 'base';
+  if (s.includes('bull')) return 'bull';
+  if (s.includes('bear')) return 'bear';
+  return s; // fallback
+}
+
 /* Load rankings */
 async function loadRankings() {
   const raw = await fetchCSV('data/exports/rankings/amc_rankings_latest.csv');
@@ -1164,19 +1173,18 @@ async function loadRevenue() {
   }));
 }
 
-/* Load forecast AUM and extract per-AMC + industry */
+/* Load forecast AUM (column names: amc_name, scenario, current_aum_cr, year_1_aum_cr, year_2_aum_cr, year_3_aum_cr) */
 async function loadForecastAum() {
   const raw = await fetchCSV('data/exports/forecasting/forecast_aum_latest.csv');
   const perAmc = {};
   let industry = {};
   raw.forEach(row => {
     const name = row.amc_name.trim();
-    const scenario = row.scenario.trim().toLowerCase();
-    // columns: current_aum_cr, fy1_aum_cr, fy2_aum_cr, fy3_aum_cr
+    const scenario = normaliseScenario(row.scenario);
     const cur = parseFloat(row.current_aum_cr);
-    const y1 = parseFloat(row.fy1_aum_cr);
-    const y2 = parseFloat(row.fy2_aum_cr);
-    const y3 = parseFloat(row.fy3_aum_cr);
+    const y1  = parseFloat(row.year_1_aum_cr);
+    const y2  = parseFloat(row.year_2_aum_cr);
+    const y3  = parseFloat(row.year_3_aum_cr);
     const arr = [cur, y1, y2, y3];
     if (name === 'Industry' || name === 'INDUSTRY' || name === 'Total') {
       if (!industry[scenario]) industry[scenario] = arr;
@@ -1188,18 +1196,18 @@ async function loadForecastAum() {
   return { perAmc, industry };
 }
 
-/* Load forecast revenue and extract per-AMC + industry */
+/* Load forecast revenue (column names: amc_name, scenario, revenue_yield, current_revenue_cr, revenue_y1_cr, revenue_y2_cr, revenue_y3_cr) */
 async function loadForecastRev() {
   const raw = await fetchCSV('data/exports/forecasting/forecast_revenue_latest.csv');
   const perAmc = {};
   let industry = {};
   raw.forEach(row => {
     const name = row.amc_name.trim();
-    const scenario = row.scenario.trim().toLowerCase();
-    const cur = parseFloat(row.current_rev_cr);
-    const y1 = parseFloat(row.fy1_rev_cr);
-    const y2 = parseFloat(row.fy2_rev_cr);
-    const y3 = parseFloat(row.fy3_rev_cr);
+    const scenario = normaliseScenario(row.scenario);
+    const cur = parseFloat(row.current_revenue_cr);
+    const y1  = parseFloat(row.revenue_y1_cr);
+    const y2  = parseFloat(row.revenue_y2_cr);
+    const y3  = parseFloat(row.revenue_y3_cr);
     const arr = [cur, y1, y2, y3];
     if (name === 'Industry' || name === 'INDUSTRY' || name === 'Total') {
       if (!industry[scenario]) industry[scenario] = arr;
@@ -1274,7 +1282,6 @@ function updateOverviewKPIs() {
   const totalRev = REVENUE.length ? REVENUE.reduce((s,r)=>s+r.rev,0).toFixed(0) : '--';
   const amcCount = RANKINGS.length;
 
-  // KPI left panel
   document.getElementById('overview-kpi-body').innerHTML = `
     <div class="kpi-grid">
       <div class="kpi-card kpi-card-wide">
@@ -1316,8 +1323,6 @@ function updateOverviewKPIs() {
     <div class="data-row"><span class="data-row-key">Bull Case FY+3</span><span class="data-row-val green">₹${INDUSTRY_FORECAST_AUM.bull ? (INDUSTRY_FORECAST_AUM.bull[3]/100000).toFixed(2) : '--'} L Cr</span></div>
     <div class="data-row"><span class="data-row-key">Bear Case FY+3</span><span class="data-row-val" style="color:var(--term-red);">₹${INDUSTRY_FORECAST_AUM.bear ? (INDUSTRY_FORECAST_AUM.bear[3]/100000).toFixed(2) : '--'} L Cr</span></div>
   `;
-
-  // Update status bar amc count
   document.getElementById('status-amcs').textContent = amcCount;
 }
 
@@ -1405,7 +1410,6 @@ function switchTab(tab) {
   const panelEl = document.getElementById('panel-' + tab);
   if (tabEl) tabEl.classList.add('active');
   if (panelEl) panelEl.classList.add('active');
-  // Update fkey
   document.querySelectorAll('.fkey').forEach(f => f.classList.remove('active'));
   const fk = document.getElementById('fk-' + tab);
   if (fk) fk.classList.add('active');
@@ -1432,13 +1436,10 @@ function initTabCharts(tab) {
    ═══════════════════════════════════════════════════════ */
 function initOverviewCharts() {
   if (!RANKINGS.length) return;
-  // Top 10 table
-  const tbody = document.getElementById('overview-top10-body');
-  tbody.innerHTML = RANKINGS.slice(0,10).map(r =>
+  document.getElementById('overview-top10-body').innerHTML = RANKINGS.slice(0,10).map(r =>
     `<tr><td class="td-rank">${r.rank}</td><td class="td-name" style="font-size:10px;">${r.name}</td><td class="td-pct" style="color:var(--term-cyan); text-align:right;">${r.share.toFixed(2)}%</td></tr>`
   ).join('');
 
-  // Bar chart top 15
   const c1 = mkChart('chart-overview-bar');
   if (c1) {
     const top15 = RANKINGS.slice(0,15);
@@ -1457,7 +1458,6 @@ function initOverviewCharts() {
     }));
   }
 
-  // Pie: top10 vs rest
   const c2 = mkChart('chart-overview-pie');
   if (c2) {
     const top10aum = RANKINGS.slice(0,10).reduce((s,r)=>s+r.aum,0);
@@ -1546,7 +1546,6 @@ function renderRankingsBarChart(data) {
 
 function updateConcentrationStats() {
   if (!RANKINGS.length) return;
-  const totalAum = RANKINGS.reduce((s,r)=>s+r.aum,0);
   const top3 = RANKINGS.slice(0,3).reduce((s,r)=>s+r.share,0);
   const top5 = RANKINGS.slice(0,5).reduce((s,r)=>s+r.share,0);
   const top10 = RANKINGS.slice(0,10).reduce((s,r)=>s+r.share,0);
@@ -1844,7 +1843,6 @@ function renderFcIndustryAum() {
       {name:'Bear Case',type:'line',data:bear,lineStyle:{color:'#FF3333',width:2,type:'dashed'},itemStyle:{color:'#FF3333'},symbol:'circle',symbolSize:6},
     ]
   }));
-  // Update industry table
   document.getElementById('fc-industry-body').innerHTML = `
     <tr><td class="text-cyan">Base Case</td><td class="td-num">₹${(base[0]/100000).toFixed(2)}</td><td class="td-num">₹${(base[1]/100000).toFixed(2)}</td><td class="td-num">₹${(base[2]/100000).toFixed(2)}</td><td class="td-num">₹${(base[3]/100000).toFixed(2)}</td></tr>
     <tr><td class="text-green">Bull Case</td><td class="td-num">₹${(bull[0]/100000).toFixed(2)}</td><td class="td-num">₹${(bull[1]/100000).toFixed(2)}</td><td class="td-num">₹${(bull[2]/100000).toFixed(2)}</td><td class="td-num">₹${(bull[3]/100000).toFixed(2)}</td></tr>
@@ -1918,6 +1916,9 @@ function renderAmcForecast() {
   }
   const c2 = mkChart('chart-fc-amc-rev');
   if (c2 && fr) {
+    const rbase = fr.base || [0,0,0,0];
+    const rbull = fr.bull || [0,0,0,0];
+    const rbear = fr.bear || [0,0,0,0];
     c2.setOption(applyTheme({
       tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`${p.seriesName}: ₹${p.value.toFixed(2)} Cr`},
       legend:{data:['Base','Bull','Bear'],textStyle:{color:'#888',fontFamily:'Courier New',fontSize:9},bottom:0},
@@ -1925,9 +1926,9 @@ function renderAmcForecast() {
       xAxis:{type:'category',data:labels,axisLine:{lineStyle:{color:'#333'}},axisLabel:{color:'#888',fontFamily:'Courier New'}},
       yAxis:{type:'value',axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:v=>`₹${v.toFixed(0)}`},splitLine:{lineStyle:{color:'#1a1a1a'}}},
       series:[
-        {name:'Base',type:'bar',data:fr.base||[0,0,0,0],itemStyle:{color:'#00CCCC'}},
-        {name:'Bull',type:'bar',data:fr.bull||[0,0,0,0],itemStyle:{color:'#00CC44'}},
-        {name:'Bear',type:'bar',data:fr.bear||[0,0,0,0],itemStyle:{color:'#FF3333'}},
+        {name:'Base',type:'bar',data:rbase,itemStyle:{color:'#00CCCC'}},
+        {name:'Bull',type:'bar',data:rbull,itemStyle:{color:'#00CC44'}},
+        {name:'Bear',type:'bar',data:rbear,itemStyle:{color:'#FF3333'}},
       ]
     }));
   }
@@ -2053,9 +2054,8 @@ const HIST_FILES = {
   forecast:    ['forecast_aum_20260615_114330.csv','forecast_aum_20260615_134232.csv','forecast_aum_20260615_134731.csv','forecast_aum_20260615_182154.csv','forecast_aum_latest.csv','forecast_revenue_20260615_114718.csv','forecast_revenue_20260615_134232.csv','forecast_revenue_20260615_134731.csv','forecast_revenue_20260615_182155.csv','forecast_revenue_latest.csv'],
 };
 
-/* Explorer functions unchanged, except data already defined */
+/* Explorer functions unchanged */
 let expDs = 'nav';
-let expFilteredData = [];
 
 function initExplorer() {
   expSetDs('nav');
@@ -2079,19 +2079,16 @@ function renderExplorer(ds) {
     title.textContent = '▌ NAV Snapshot — 12 Jun 2026';
     tag.textContent = '14,212 RECORDS (SHOWING SAMPLE)';
     searchRow.style.display = '';
-    expFilteredData = NAV_DATA;
     renderNavTable(NAV_DATA);
   } else if (ds === 'ter') {
     title.textContent = '▌ Expense Ratios (TER) — Jun 2026';
     tag.textContent = 'REGULAR & DIRECT';
     searchRow.style.display = '';
-    expFilteredData = TER_DATA;
     renderTerTable(TER_DATA);
   } else if (ds === 'aum') {
     title.textContent = '▌ AUM (Processed) — Jan–Mar 2026';
     tag.textContent = '51 AMCs';
     searchRow.style.display = '';
-    expFilteredData = AUM_DATA;
     renderAumTable(AUM_DATA);
   } else if (ds.startsWith('hist-')) {
     searchRow.style.display = 'none';
