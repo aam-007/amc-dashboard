@@ -705,7 +705,7 @@ a { text-decoration:none; color:inherit; }
     <div class="upd-led"></div>
     <span>Last Pipeline Run: <strong id="lastRunDisplay">15 Jun 2026 18:19:54 IST</strong></span>
     <span style="color:var(--term-grey);">|</span>
-    <span>51 AMCs &nbsp;|&nbsp; <span id="schemeCountDisplay">14,212</span> Schemes</span>
+    <span><span id="amcCountDisplay">51</span> AMCs &nbsp;|&nbsp; <span id="schemeCountDisplay">14,212</span> Schemes</span>
   </div>
 </div>
 
@@ -1116,7 +1116,7 @@ a { text-decoration:none; color:inherit; }
 'use strict';
 
 /* ═══════════════════════════════════════════════════════
-   DATA — dynamically loaded from CSV files
+   DATA — dynamically loaded from CSV files + manifest
    ═══════════════════════════════════════════════════════ */
 let RANKINGS = [];
 let REVENUE  = [];
@@ -1124,6 +1124,14 @@ let FORECAST_AUM = {};
 let FORECAST_REV = {};
 let INDUSTRY_FORECAST_AUM = {};
 let INDUSTRY_FORECAST_REV = {};
+
+// Historical file lists – will be overwritten by manifest if available
+let histFiles = {
+  rankings:    ['amc_rankings_20260613_125917.csv','amc_rankings_20260615_130914.csv','amc_rankings_20260615_131238.csv','amc_rankings_20260615_131439.csv','amc_rankings_20260615_132735.csv','amc_rankings_20260615_133518.csv','amc_rankings_20260615_134230.csv','amc_rankings_20260615_134729.csv','amc_rankings_20260615_182153.csv','amc_rankings_latest.csv'],
+  market_share:['market_share_20260613_125233.csv','market_share_20260615_130913.csv','market_share_20260615_131438.csv','market_share_20260615_132734.csv','market_share_20260615_134230.csv','market_share_20260615_134729.csv','market_share_20260615_182152.csv','market_share_latest.csv'],
+  revenue:     ['amc_revenue_20260614_184539.csv','amc_revenue_20260615_134231.csv','amc_revenue_20260615_134730.csv','amc_revenue_20260615_182153.csv','amc_revenue_latest.csv'],
+  forecast:    ['forecast_aum_20260615_114330.csv','forecast_aum_20260615_134232.csv','forecast_aum_20260615_134731.csv','forecast_aum_20260615_182154.csv','forecast_aum_latest.csv','forecast_revenue_20260615_114718.csv','forecast_revenue_20260615_134232.csv','forecast_revenue_20260615_134731.csv','forecast_revenue_20260615_182155.csv','forecast_revenue_latest.csv'],
+};
 
 /* Utility: fetch and parse CSV into array of objects */
 async function fetchCSV(relativePath) {
@@ -1151,8 +1159,8 @@ function normaliseScenario(raw) {
 }
 
 /* Load rankings */
-async function loadRankings() {
-  const raw = await fetchCSV('data/exports/rankings/amc_rankings_latest.csv');
+async function loadRankings(path) {
+  const raw = await fetchCSV(path || 'data/exports/rankings/amc_rankings_latest.csv');
   return raw.map(r => ({
     rank: parseInt(r.rank, 10),
     name: r.amc_name,
@@ -1162,8 +1170,8 @@ async function loadRankings() {
 }
 
 /* Load revenue */
-async function loadRevenue() {
-  const raw = await fetchCSV('data/exports/revenue/amc_revenue_latest.csv');
+async function loadRevenue(path) {
+  const raw = await fetchCSV(path || 'data/exports/revenue/amc_revenue_latest.csv');
   return raw.map(r => ({
     rank: parseInt(r.rank, 10),
     name: r.amc_name,
@@ -1174,8 +1182,8 @@ async function loadRevenue() {
 }
 
 /* Load forecast AUM (column names: amc_name, scenario, current_aum_cr, year_1_aum_cr, year_2_aum_cr, year_3_aum_cr) */
-async function loadForecastAum() {
-  const raw = await fetchCSV('data/exports/forecasting/forecast_aum_latest.csv');
+async function loadForecastAum(path) {
+  const raw = await fetchCSV(path || 'data/exports/forecasting/forecast_aum_latest.csv');
   const perAmc = {};
   let industry = {};
   raw.forEach(row => {
@@ -1214,8 +1222,8 @@ async function loadForecastAum() {
 }
 
 /* Load forecast revenue (column names: amc_name, scenario, revenue_yield, current_revenue_cr, revenue_y1_cr, revenue_y2_cr, revenue_y3_cr) */
-async function loadForecastRev() {
-  const raw = await fetchCSV('data/exports/forecasting/forecast_revenue_latest.csv');
+async function loadForecastRev(path) {
+  const raw = await fetchCSV(path || 'data/exports/forecasting/forecast_revenue_latest.csv');
   const perAmc = {};
   let industry = {};
   raw.forEach(row => {
@@ -1253,21 +1261,65 @@ async function loadForecastRev() {
   return { perAmc, industry };
 }
 
+/* Load manifest (Phase 1) */
+async function loadManifest() {
+  try {
+    const resp = await fetch('data_manifest.json');
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch {
+    return null;
+  }
+}
+
 /* Master loader */
 async function loadAllData() {
   try {
+    // Load manifest first
+    const manifest = await loadManifest();
+
+    // Resolve paths – use manifest if available, else default hardcoded paths
+    const rPath = manifest?.latest?.rankings || 'data/exports/rankings/amc_rankings_latest.csv';
+    const vPath = manifest?.latest?.revenue || 'data/exports/revenue/amc_revenue_latest.csv';
+    const faPath = manifest?.latest?.forecast || 'data/exports/forecasting/forecast_aum_latest.csv';
+    const frPath = manifest?.latest?.forecast_rev || 'data/exports/forecasting/forecast_revenue_latest.csv';
+
     const [rankings, revenue, fcAum, fcRev] = await Promise.all([
-      loadRankings(),
-      loadRevenue(),
-      loadForecastAum(),
-      loadForecastRev()
+      loadRankings(rPath),
+      loadRevenue(vPath),
+      loadForecastAum(faPath),
+      loadForecastRev(frPath)
     ]);
+
     RANKINGS = rankings;
     REVENUE  = revenue;
     FORECAST_AUM = fcAum.perAmc;
     INDUSTRY_FORECAST_AUM = fcAum.industry;
     FORECAST_REV = fcRev.perAmc;
     INDUSTRY_FORECAST_REV = fcRev.industry;
+
+    // Update historical file lists from manifest (if available)
+    if (manifest?.historical_files) {
+      histFiles = manifest.historical_files;
+    }
+
+    // Update metadata from manifest
+    if (manifest?.metadata) {
+      const m = manifest.metadata;
+      if (m.last_run) {
+        document.getElementById('lastRunDisplay').textContent = m.last_run;
+        document.getElementById('status-last-run').textContent = m.last_run;
+      }
+      if (m.amc_count != null) {
+        document.getElementById('amcCountDisplay').textContent = m.amc_count;
+        document.getElementById('status-amcs').textContent = m.amc_count;
+      }
+      if (m.scheme_count != null) {
+        document.getElementById('schemeCountDisplay').textContent = m.scheme_count;
+        document.getElementById('status-schemes').textContent = m.scheme_count;
+      }
+    }
+
     updateTicker();
     updateOverviewKPIs();
     initTabCharts('overview');
@@ -1616,7 +1668,7 @@ function renderConcDonut() {
 function renderHistList(key, elId, path) {
   const el = document.getElementById(elId);
   if (!el) return;
-  const files = HIST_FILES[key] || [];
+  const files = histFiles[key] || [];
   el.innerHTML = files.map(f =>
     `<div style="display:flex; justify-content:space-between; padding:2px 4px; border-bottom:1px solid #111; font-family:var(--font-mono); font-size:9px; color:var(--term-grey);">
       <span>${f}</span>
@@ -2080,15 +2132,7 @@ const AUM_DATA = [
   {name:'Capitalmind',aum:472.11,month:'January - March 2026'},
 ];
 
-/* HIST_FILES static (unchanged) */
-const HIST_FILES = {
-  rankings:    ['amc_rankings_20260613_125917.csv','amc_rankings_20260615_130914.csv','amc_rankings_20260615_131238.csv','amc_rankings_20260615_131439.csv','amc_rankings_20260615_132735.csv','amc_rankings_20260615_133518.csv','amc_rankings_20260615_134230.csv','amc_rankings_20260615_134729.csv','amc_rankings_20260615_182153.csv','amc_rankings_latest.csv'],
-  market_share:['market_share_20260613_125233.csv','market_share_20260615_130913.csv','market_share_20260615_131438.csv','market_share_20260615_132734.csv','market_share_20260615_134230.csv','market_share_20260615_134729.csv','market_share_20260615_182152.csv','market_share_latest.csv'],
-  revenue:     ['amc_revenue_20260614_184539.csv','amc_revenue_20260615_134231.csv','amc_revenue_20260615_134730.csv','amc_revenue_20260615_182153.csv','amc_revenue_latest.csv'],
-  forecast:    ['forecast_aum_20260615_114330.csv','forecast_aum_20260615_134232.csv','forecast_aum_20260615_134731.csv','forecast_aum_20260615_182154.csv','forecast_aum_latest.csv','forecast_revenue_20260615_114718.csv','forecast_revenue_20260615_134232.csv','forecast_revenue_20260615_134731.csv','forecast_revenue_20260615_182155.csv','forecast_revenue_latest.csv'],
-};
-
-/* Explorer functions unchanged */
+// Explorer functions (still use static data)
 let expDs = 'nav';
 
 function initExplorer() {
@@ -2134,12 +2178,12 @@ function renderExplorer(ds) {
     };
     const m = map[ds];
     title.textContent = `▌ ${m.t} — Historical Files`;
-    tag.textContent = `${HIST_FILES[m.key].length} FILES`;
+    tag.textContent = `${histFiles[m.key] ? histFiles[m.key].length : 0} FILES`;
     content.innerHTML = `
       <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:8px; padding:4px; border:1px solid #222; background:#050505;">
         PATH: ${m.path}<br/>All files generated by pipeline runs. Click ↗ to navigate to file location.
       </div>
-      ${HIST_FILES[m.key].map(f=>`
+      ${(histFiles[m.key] || []).map(f=>`
         <div class="nav-result-row" style="cursor:default;">
           <span class="nav-name">${f}</span>
           <span class="nav-date">${extractTimestamp(f)}</span>

@@ -61,7 +61,7 @@ PIPELINE_LOG_DIR   = PROJECT_ROOT / "data" / "exports" / "pipeline"
 SUCCESS_LOG_SUBDIR = "SUCCESS_RUN_LOGS"
 FAILED_LOG_SUBDIR  = "FAILED_RUN_LOGS"
 
-# ── Manifest path (Phase 1 – dynamic state) ────────────────────────────────
+# ── Manifest path (all‑encompassing dynamic state) ─────────────────────────
 PIPELINE_STATE_PATH = PROJECT_ROOT / "data_manifest.json"
 
 # ── Window ─────────────────────────────────────────────────────────────────
@@ -1085,8 +1085,9 @@ class MainWindow(QMainWindow):
 
     def _generate_pipeline_state(self) -> None:
         """
-        Generate data_manifest.json containing:
-          - paths to the latest CSV files for rankings, market_share, revenue, forecast
+        Generate all‑encompassing data_manifest.json containing:
+          - latest file paths for every dataset (rankings, revenue, forecast AUM,
+            forecast revenue, market share, nav snapshot, expense ratio, aum processed)
           - full historical file lists per directory
           - metadata: last run timestamp, AMC count, scheme count
         """
@@ -1096,12 +1097,11 @@ class MainWindow(QMainWindow):
             "metadata": {}
         }
 
-        # Directories to scan
+        # ── 1. Export directories (rankings, market_share, revenue) ─────
         export_dirs = {
             "rankings": "data/exports/rankings",
             "market_share": "data/exports/market_share",
             "revenue": "data/exports/revenue",
-            "forecast": "data/exports/forecasting",
         }
         for key, rel_dir in export_dirs.items():
             dir_path = PROJECT_ROOT / rel_dir
@@ -1117,7 +1117,51 @@ class MainWindow(QMainWindow):
                 else:
                     manifest["latest"][key] = None
 
-        # Metadata
+        # ── 2. Forecast directory (separate AUM / revenue latest) ─────────
+        forecast_dir = PROJECT_ROOT / "data/exports/forecasting"
+        if forecast_dir.is_dir():
+            forecast_files = sorted([f.name for f in forecast_dir.glob("*.csv")])
+            manifest["historical_files"]["forecast"] = forecast_files
+
+            # forecast AUM latest
+            aum_latest = next((f for f in forecast_files
+                               if f.startswith("forecast_aum") and f.endswith("_latest.csv")), None)
+            if not aum_latest:
+                aum_files = [f for f in forecast_files if f.startswith("forecast_aum")]
+                aum_latest = aum_files[-1] if aum_files else None
+            manifest["latest"]["forecast_aum"] = f"data/exports/forecasting/{aum_latest}" if aum_latest else None
+
+            # forecast revenue latest
+            rev_latest = next((f for f in forecast_files
+                               if f.startswith("forecast_revenue") and f.endswith("_latest.csv")), None)
+            if not rev_latest:
+                rev_files = [f for f in forecast_files if f.startswith("forecast_revenue")]
+                rev_latest = rev_files[-1] if rev_files else None
+            manifest["latest"]["forecast_revenue"] = f"data/exports/forecasting/{rev_latest}" if rev_latest else None
+        else:
+            manifest["historical_files"]["forecast"] = []
+            manifest["latest"]["forecast_aum"] = None
+            manifest["latest"]["forecast_revenue"] = None
+
+        # ── 3. Processed data directories (nav, expense_ratio, aum) ──────
+        processed_dirs = {
+            "nav_snapshot": "data/processed/nav",
+            "expense_ratio": "data/processed/expense_ratio",
+            "aum_processed": "data/processed/aum",
+        }
+        for key, rel_dir in processed_dirs.items():
+            dir_path = PROJECT_ROOT / rel_dir
+            if dir_path.is_dir():
+                # Only CSV files (ignore .parquet, .txt, etc.)
+                files = sorted([f.name for f in dir_path.glob("*.csv")])
+                manifest["historical_files"][key] = files
+                # latest = last file (they are sorted by timestamp due to naming convention)
+                if files:
+                    manifest["latest"][key] = f"{rel_dir}/{files[-1]}"
+                else:
+                    manifest["latest"][key] = None
+
+        # ── 4. Metadata ──────────────────────────────────────────────────
         manifest["metadata"]["last_run"] = datetime.now().strftime("%d %b %Y %H:%M:%S IST")
 
         # AMC count from rankings
@@ -1125,7 +1169,6 @@ class MainWindow(QMainWindow):
         if rankings_latest.is_file():
             with open(rankings_latest, "r", encoding="utf-8") as f:
                 lines = f.readlines()
-                # Subtract header
                 amc_count = len(lines) - 1 if lines else 0
                 manifest["metadata"]["amc_count"] = max(0, amc_count)
         else:
@@ -1139,13 +1182,13 @@ class MainWindow(QMainWindow):
                 latest_master = master_files[-1]
                 with open(latest_master, "r", encoding="utf-8") as f:
                     line_count = sum(1 for _ in f)
-                    manifest["metadata"]["scheme_count"] = max(0, line_count - 1)  # subtract header
+                    manifest["metadata"]["scheme_count"] = max(0, line_count - 1)
             else:
                 manifest["metadata"]["scheme_count"] = 0
         else:
             manifest["metadata"]["scheme_count"] = 0
 
-        # Write manifest
+        # ── Write manifest ───────────────────────────────────────────────
         manifest_path = PROJECT_ROOT / "data_manifest.json"
         try:
             with open(manifest_path, "w", encoding="utf-8") as f:
