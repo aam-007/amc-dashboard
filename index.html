@@ -1193,6 +1193,23 @@ async function loadForecastAum() {
       perAmc[name][scenario] = arr;
     }
   });
+  // If no explicit industry row found, compute from per-AMC data
+  if (Object.keys(industry).length === 0) {
+    const scenarios = ['base','bull','bear'];
+    industry = {};
+    scenarios.forEach(sc => {
+      let sumCur=0, sumY1=0, sumY2=0, sumY3=0;
+      Object.values(perAmc).forEach(amc => {
+        if (amc[sc]) {
+          sumCur += amc[sc][0];
+          sumY1  += amc[sc][1];
+          sumY2  += amc[sc][2];
+          sumY3  += amc[sc][3];
+        }
+      });
+      industry[sc] = [sumCur, sumY1, sumY2, sumY3];
+    });
+  }
   return { perAmc, industry };
 }
 
@@ -1216,6 +1233,23 @@ async function loadForecastRev() {
       perAmc[name][scenario] = arr;
     }
   });
+  // Compute industry from per-AMC if no explicit row
+  if (Object.keys(industry).length === 0) {
+    const scenarios = ['base','bull','bear'];
+    industry = {};
+    scenarios.forEach(sc => {
+      let sumCur=0, sumY1=0, sumY2=0, sumY3=0;
+      Object.values(perAmc).forEach(amc => {
+        if (amc[sc]) {
+          sumCur += amc[sc][0];
+          sumY1  += amc[sc][1];
+          sumY2  += amc[sc][2];
+          sumY3  += amc[sc][3];
+        }
+      });
+      industry[sc] = [sumCur, sumY1, sumY2, sumY3];
+    });
+  }
   return { perAmc, industry };
 }
 
