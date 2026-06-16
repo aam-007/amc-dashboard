@@ -5,9 +5,9 @@
     "revenue": "data/exports/revenue/amc_revenue_latest.csv",
     "forecast_aum": "data/exports/forecasting/forecast_aum_latest.csv",
     "forecast_revenue": "data/exports/forecasting/forecast_revenue_latest.csv",
-    "nav_snapshot": "data/processed/nav/nav_snapshot_20260616_231451.csv",
-    "expense_ratio": "data/processed/expense_ratio/expense_ratio_clean_June_2026_20260616_231447.csv",
-    "aum_processed": "data/processed/aum/aum_clean_January_March_2026_20260616_231402.csv"
+    "nav_snapshot": "data/processed/nav/nav_snapshot_20260616_232036.csv",
+    "expense_ratio": "data/processed/expense_ratio/expense_ratio_clean_June_2026_20260616_232033.csv",
+    "aum_processed": "data/processed/aum/aum_clean_January_March_2026_20260616_231948.csv"
   },
   "historical_files": {
     "rankings": [
@@ -22,6 +22,7 @@
       "amc_rankings_20260615_182153.csv",
       "amc_rankings_20260616_225652.csv",
       "amc_rankings_20260616_231533.csv",
+      "amc_rankings_20260616_232115.csv",
       "amc_rankings_latest.csv",
       "top_10_amcs_20260613_125917.csv",
       "top_10_amcs_20260615_130914.csv",
@@ -34,6 +35,7 @@
       "top_10_amcs_20260615_182153.csv",
       "top_10_amcs_20260616_225652.csv",
       "top_10_amcs_20260616_231533.csv",
+      "top_10_amcs_20260616_232115.csv",
       "top_10_amcs_latest.csv"
     ],
     "market_share": [
@@ -46,6 +48,7 @@
       "market_share_20260615_182152.csv",
       "market_share_20260616_225651.csv",
       "market_share_20260616_231532.csv",
+      "market_share_20260616_232114.csv",
       "market_share_latest.csv"
     ],
     "revenue": [
@@ -55,6 +58,7 @@
       "amc_revenue_20260615_182153.csv",
       "amc_revenue_20260616_225653.csv",
       "amc_revenue_20260616_231533.csv",
+      "amc_revenue_20260616_232116.csv",
       "amc_revenue_latest.csv",
       "revenue_validation_20260614_185111.csv",
       "revenue_validation_20260614_185343.csv",
@@ -64,6 +68,7 @@
       "revenue_validation_20260615_182154.csv",
       "revenue_validation_20260616_225653.csv",
       "revenue_validation_20260616_231534.csv",
+      "revenue_validation_20260616_232116.csv",
       "revenue_validation_latest.csv"
     ],
     "forecast": [
@@ -73,6 +78,7 @@
       "forecast_aum_20260615_182154.csv",
       "forecast_aum_20260616_225654.csv",
       "forecast_aum_20260616_231534.csv",
+      "forecast_aum_20260616_232117.csv",
       "forecast_aum_latest.csv",
       "forecast_revenue_20260615_114718.csv",
       "forecast_revenue_20260615_134232.csv",
@@ -80,6 +86,7 @@
       "forecast_revenue_20260615_182155.csv",
       "forecast_revenue_20260616_225654.csv",
       "forecast_revenue_20260616_231535.csv",
+      "forecast_revenue_20260616_232117.csv",
       "forecast_revenue_latest.csv"
     ],
     "nav_snapshot": [
@@ -94,7 +101,8 @@
       "nav_snapshot_20260615_134658.csv",
       "nav_snapshot_20260615_182120.csv",
       "nav_snapshot_20260616_225614.csv",
-      "nav_snapshot_20260616_231451.csv"
+      "nav_snapshot_20260616_231451.csv",
+      "nav_snapshot_20260616_232036.csv"
     ],
     "expense_ratio": [
       "expense_ratio_clean_June_2026_20260612_115721.csv",
@@ -105,7 +113,8 @@
       "expense_ratio_clean_June_2026_20260615_134655.csv",
       "expense_ratio_clean_June_2026_20260615_182117.csv",
       "expense_ratio_clean_June_2026_20260616_225612.csv",
-      "expense_ratio_clean_June_2026_20260616_231447.csv"
+      "expense_ratio_clean_June_2026_20260616_231447.csv",
+      "expense_ratio_clean_June_2026_20260616_232033.csv"
     ],
     "aum_processed": [
       "aum_clean_January_March_2026_20260612_023555.csv",
@@ -119,11 +128,12 @@
       "aum_clean_January_March_2026_20260615_134613.csv",
       "aum_clean_January_March_2026_20260615_182034.csv",
       "aum_clean_January_March_2026_20260616_225525.csv",
-      "aum_clean_January_March_2026_20260616_231402.csv"
+      "aum_clean_January_March_2026_20260616_231402.csv",
+      "aum_clean_January_March_2026_20260616_231948.csv"
     ]
   },
   "metadata": {
-    "last_run": "16 Jun 2026 23:15:43 IST",
+    "last_run": "16 Jun 2026 23:21:23 IST",
     "amc_count": 51,
     "scheme_count": 14214
   }

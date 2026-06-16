@@ -664,7 +664,7 @@ a { text-decoration:none; color:inherit; }
   </div>
   <div class="menu-item">Help
     <div class="menu-dropdown">
-      <a onclick="alert('AM-CONSOLE v1.0\nData: AMFI India\nPeriod: Jan–Mar 2026\n51 AMCs | 14,212 Schemes')">About</a>
+      <a href="https://github.com/aam-007/amc-dashboard" target="_blank" rel="noopener noreferrer">About</a>
     </div>
   </div>
 </div>
@@ -703,9 +703,9 @@ a { text-decoration:none; color:inherit; }
   </div>
   <div class="data-updated">
     <div class="upd-led"></div>
-    <span>Last Pipeline Run: <strong id="lastRunDisplay">15 Jun 2026 18:19:54 IST</strong></span>
+    <span>Last Pipeline Run: <strong id="lastRunDisplay">--</strong></span>
     <span style="color:var(--term-grey);">|</span>
-    <span><span id="amcCountDisplay">51</span> AMCs &nbsp;|&nbsp; <span id="schemeCountDisplay">14,212</span> Schemes</span>
+    <span><span id="amcCountDisplay">--</span> AMCs &nbsp;|&nbsp; <span id="schemeCountDisplay">--</span> Schemes</span>
   </div>
 </div>
 
@@ -793,7 +793,7 @@ a { text-decoration:none; color:inherit; }
         <!-- LEFT: Full Table -->
         <div class="term-panel">
           <div class="panel-titlebar">
-            <span class="panel-title">▌ AMC Rankings — All 51</span>
+            <span class="panel-title">▌ AMC Rankings — All</span>
             <span class="panel-tag">Jan–Mar 2026</span>
           </div>
           <div class="panel-body" style="padding:4px 6px;">
@@ -835,7 +835,7 @@ a { text-decoration:none; color:inherit; }
             <div class="data-row"><span class="data-row-key">Top 3 AMCs</span><span class="data-row-val amber" id="conc-top3">--</span></div>
             <div class="data-row"><span class="data-row-key">Top 5 AMCs</span><span class="data-row-val amber" id="conc-top5">--</span></div>
             <div class="data-row"><span class="data-row-key">Top 10 AMCs</span><span class="data-row-val amber" id="conc-top10">--</span></div>
-            <div class="data-row"><span class="data-row-key">Remaining 41</span><span class="data-row-val" id="conc-rest">--</span></div>
+            <div class="data-row"><span class="data-row-key">Remaining</span><span class="data-row-val" id="conc-rest">--</span></div>
             <hr class="panel-sep">
             <div class="panel-section-title">▸ AUM Distribution</div>
             <div class="chart-wrap" style="height:180px;" id="chart-conc-donut"></div>
@@ -877,7 +877,7 @@ a { text-decoration:none; color:inherit; }
         <div class="term-panel">
           <div class="panel-titlebar">
             <span class="panel-title">▌ Market Share — Table</span>
-            <span class="panel-tag">ALL 51 AMCs</span>
+            <span class="panel-tag">ALL AMCs</span>
           </div>
           <div class="panel-body" style="padding:4px 6px;">
             <div style="display:flex; align-items:center; gap:4px; margin-bottom:6px;">
@@ -1062,14 +1062,16 @@ a { text-decoration:none; color:inherit; }
         <div class="term-panel">
           <div class="panel-titlebar">
             <span class="panel-title" id="exp-title">▌ NAV Snapshot — Jun 2026</span>
-            <span class="panel-tag" id="exp-tag">14,212 RECORDS</span>
+            <span class="panel-tag" id="exp-tag">Loading...</span>
           </div>
           <div class="panel-body" style="display:flex; flex-direction:column; gap:6px; padding:6px;">
             <div style="display:flex; gap:4px; align-items:center;" id="exp-search-row">
-              <input type="text" class="search-input" id="expSearch" placeholder="Search scheme name, code..." oninput="filterExplorer()" style="flex:1;">
+              <input type="text" class="search-input" id="expSearch" placeholder="Search..." oninput="filterExplorer()" style="flex:1;">
               <button class="dl-btn" id="exp-dl-btn" onclick="expDownload()">↓ Download</button>
             </div>
-            <div id="exp-content" style="flex:1; overflow-y:auto; min-height:0;"></div>
+            <div id="exp-content" style="flex:1; overflow-y:auto; min-height:0;">
+              <div style="color:var(--term-grey); font-family:var(--font-mono); font-size:10px; text-align:center; margin-top:40px;">Select a dataset to view</div>
+            </div>
           </div>
         </div>
 
@@ -1089,10 +1091,10 @@ a { text-decoration:none; color:inherit; }
     <div class="sled sled-ok"></div>
     <span>[AMFI DATA LOADED]</span>
   </div>
-  <div class="status-seg"><span>[<span id="status-amcs">51</span> AMCs]</span></div>
-  <div class="status-seg"><span>[<span id="status-schemes">14,212</span> SCHEMES]</span></div>
+  <div class="status-seg"><span>[<span id="status-amcs">--</span> AMCs]</span></div>
+  <div class="status-seg"><span>[<span id="status-schemes">--</span> SCHEMES]</span></div>
   <div class="status-seg"><span>PERIOD: <strong>Jan–Mar 2026</strong></span></div>
-  <div class="status-seg"><span>UPDATED: <strong id="status-last-run">15 Jun 2026 18:19:54 IST</strong></span></div>
+  <div class="status-seg"><span>UPDATED: <strong id="status-last-run">--</strong></span></div>
   <div class="status-seg" style="margin-left:auto; border-right:none;">
     <span style="color:#888; font-size:9px;">AM-CONSOLE v1.0 &nbsp;|&nbsp; DATA: AMFI INDIA &nbsp;|&nbsp; © 2026</span>
   </div>
@@ -1125,13 +1127,10 @@ let FORECAST_REV = {};
 let INDUSTRY_FORECAST_AUM = {};
 let INDUSTRY_FORECAST_REV = {};
 
-// Historical file lists – will be overwritten by manifest if available
-let histFiles = {
-  rankings:    ['amc_rankings_20260613_125917.csv','amc_rankings_20260615_130914.csv','amc_rankings_20260615_131238.csv','amc_rankings_20260615_131439.csv','amc_rankings_20260615_132735.csv','amc_rankings_20260615_133518.csv','amc_rankings_20260615_134230.csv','amc_rankings_20260615_134729.csv','amc_rankings_20260615_182153.csv','amc_rankings_latest.csv'],
-  market_share:['market_share_20260613_125233.csv','market_share_20260615_130913.csv','market_share_20260615_131438.csv','market_share_20260615_132734.csv','market_share_20260615_134230.csv','market_share_20260615_134729.csv','market_share_20260615_182152.csv','market_share_latest.csv'],
-  revenue:     ['amc_revenue_20260614_184539.csv','amc_revenue_20260615_134231.csv','amc_revenue_20260615_134730.csv','amc_revenue_20260615_182153.csv','amc_revenue_latest.csv'],
-  forecast:    ['forecast_aum_20260615_114330.csv','forecast_aum_20260615_134232.csv','forecast_aum_20260615_134731.csv','forecast_aum_20260615_182154.csv','forecast_aum_latest.csv','forecast_revenue_20260615_114718.csv','forecast_revenue_20260615_134232.csv','forecast_revenue_20260615_134731.csv','forecast_revenue_20260615_182155.csv','forecast_revenue_latest.csv'],
-};
+// Dynamic manifest data
+let dataManifest = null;
+let histFiles = {};
+let latestPaths = {};
 
 /* Utility: fetch and parse CSV into array of objects */
 async function fetchCSV(relativePath) {
@@ -1140,13 +1139,12 @@ async function fetchCSV(relativePath) {
   const text = await response.text();
   const lines = text.trim().split('\n');
   const headers = lines[0].split(',').map(h => h.trim());
-  const data = lines.slice(1).map(line => {
+  return lines.slice(1).map(line => {
     const values = line.split(',').map(v => v.trim());
     const row = {};
     headers.forEach((h, i) => (row[h] = values[i]));
     return row;
   });
-  return data;
 }
 
 /* Helper to normalise scenario string to 'base', 'bull', 'bear' */
@@ -1155,12 +1153,12 @@ function normaliseScenario(raw) {
   if (s.includes('base')) return 'base';
   if (s.includes('bull')) return 'bull';
   if (s.includes('bear')) return 'bear';
-  return s; // fallback
+  return s;
 }
 
 /* Load rankings */
 async function loadRankings(path) {
-  const raw = await fetchCSV(path || 'data/exports/rankings/amc_rankings_latest.csv');
+  const raw = await fetchCSV(path);
   return raw.map(r => ({
     rank: parseInt(r.rank, 10),
     name: r.amc_name,
@@ -1171,7 +1169,7 @@ async function loadRankings(path) {
 
 /* Load revenue */
 async function loadRevenue(path) {
-  const raw = await fetchCSV(path || 'data/exports/revenue/amc_revenue_latest.csv');
+  const raw = await fetchCSV(path);
   return raw.map(r => ({
     rank: parseInt(r.rank, 10),
     name: r.amc_name,
@@ -1181,9 +1179,9 @@ async function loadRevenue(path) {
   }));
 }
 
-/* Load forecast AUM (column names: amc_name, scenario, current_aum_cr, year_1_aum_cr, year_2_aum_cr, year_3_aum_cr) */
+/* Load forecast AUM */
 async function loadForecastAum(path) {
-  const raw = await fetchCSV(path || 'data/exports/forecasting/forecast_aum_latest.csv');
+  const raw = await fetchCSV(path);
   const perAmc = {};
   let industry = {};
   raw.forEach(row => {
@@ -1201,29 +1199,23 @@ async function loadForecastAum(path) {
       perAmc[name][scenario] = arr;
     }
   });
-  // If no explicit industry row found, compute from per-AMC data
   if (Object.keys(industry).length === 0) {
     const scenarios = ['base','bull','bear'];
     industry = {};
     scenarios.forEach(sc => {
-      let sumCur=0, sumY1=0, sumY2=0, sumY3=0;
+      let s0=0,s1=0,s2=0,s3=0;
       Object.values(perAmc).forEach(amc => {
-        if (amc[sc]) {
-          sumCur += amc[sc][0];
-          sumY1  += amc[sc][1];
-          sumY2  += amc[sc][2];
-          sumY3  += amc[sc][3];
-        }
+        if (amc[sc]) { s0+=amc[sc][0]; s1+=amc[sc][1]; s2+=amc[sc][2]; s3+=amc[sc][3]; }
       });
-      industry[sc] = [sumCur, sumY1, sumY2, sumY3];
+      industry[sc] = [s0,s1,s2,s3];
     });
   }
   return { perAmc, industry };
 }
 
-/* Load forecast revenue (column names: amc_name, scenario, revenue_yield, current_revenue_cr, revenue_y1_cr, revenue_y2_cr, revenue_y3_cr) */
+/* Load forecast revenue */
 async function loadForecastRev(path) {
-  const raw = await fetchCSV(path || 'data/exports/forecasting/forecast_revenue_latest.csv');
+  const raw = await fetchCSV(path);
   const perAmc = {};
   let industry = {};
   raw.forEach(row => {
@@ -1241,27 +1233,21 @@ async function loadForecastRev(path) {
       perAmc[name][scenario] = arr;
     }
   });
-  // Compute industry from per-AMC if no explicit row
   if (Object.keys(industry).length === 0) {
     const scenarios = ['base','bull','bear'];
     industry = {};
     scenarios.forEach(sc => {
-      let sumCur=0, sumY1=0, sumY2=0, sumY3=0;
+      let s0=0,s1=0,s2=0,s3=0;
       Object.values(perAmc).forEach(amc => {
-        if (amc[sc]) {
-          sumCur += amc[sc][0];
-          sumY1  += amc[sc][1];
-          sumY2  += amc[sc][2];
-          sumY3  += amc[sc][3];
-        }
+        if (amc[sc]) { s0+=amc[sc][0]; s1+=amc[sc][1]; s2+=amc[sc][2]; s3+=amc[sc][3]; }
       });
-      industry[sc] = [sumCur, sumY1, sumY2, sumY3];
+      industry[sc] = [s0,s1,s2,s3];
     });
   }
   return { perAmc, industry };
 }
 
-/* Load manifest (Phase 1) */
+/* Load manifest */
 async function loadManifest() {
   try {
     const resp = await fetch('data_manifest.json');
@@ -1272,17 +1258,33 @@ async function loadManifest() {
   }
 }
 
+/* Download a file (for historical file links) */
+async function downloadFile(url, filename) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Failed to download ${url}`);
+    const blob = await resp.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (err) {
+    alert('Download failed: ' + err.message);
+  }
+}
+
 /* Master loader */
 async function loadAllData() {
   try {
-    // Load manifest first
     const manifest = await loadManifest();
+    dataManifest = manifest;
 
-    // Resolve paths – use manifest if available, else default hardcoded paths
+    // Resolve paths – use manifest if available
     const rPath = manifest?.latest?.rankings || 'data/exports/rankings/amc_rankings_latest.csv';
     const vPath = manifest?.latest?.revenue || 'data/exports/revenue/amc_revenue_latest.csv';
-    const faPath = manifest?.latest?.forecast || 'data/exports/forecasting/forecast_aum_latest.csv';
-    const frPath = manifest?.latest?.forecast_rev || 'data/exports/forecasting/forecast_revenue_latest.csv';
+    const faPath = manifest?.latest?.forecast_aum || 'data/exports/forecasting/forecast_aum_latest.csv';
+    const frPath = manifest?.latest?.forecast_revenue || 'data/exports/forecasting/forecast_revenue_latest.csv';
 
     const [rankings, revenue, fcAum, fcRev] = await Promise.all([
       loadRankings(rPath),
@@ -1298,12 +1300,19 @@ async function loadAllData() {
     FORECAST_REV = fcRev.perAmc;
     INDUSTRY_FORECAST_REV = fcRev.industry;
 
-    // Update historical file lists from manifest (if available)
+    // Historical file lists from manifest
     if (manifest?.historical_files) {
       histFiles = manifest.historical_files;
+    } else {
+      histFiles = {};
     }
 
-    // Update metadata from manifest
+    // Store latest paths for explorer
+    if (manifest?.latest) {
+      latestPaths = manifest.latest;
+    }
+
+    // Update metadata
     if (manifest?.metadata) {
       const m = manifest.metadata;
       if (m.last_run) {
@@ -1342,6 +1351,7 @@ function updateTicker() {
   const top5Share = RANKINGS.slice(0,5).reduce((s,r)=>s+r.share,0).toFixed(2);
   const top5Names = RANKINGS.slice(0,5).map(r=>r.name).join(', ');
   const totalRev = REVENUE.length ? REVENUE.reduce((s,r)=>s+r.rev,0).toFixed(0) : '--';
+  const lastRun = document.getElementById('lastRunDisplay').textContent || '--';
   const ticker = document.getElementById('tickerTrack');
   ticker.innerHTML = `
     <span class="tick-item text-amber">INDUSTRY AUM: ₹${totalLakh} LAKH CR &nbsp;(Jan–Mar 2026)</span>
@@ -1354,7 +1364,7 @@ function updateTicker() {
     <span class="tick-sep">◆</span>
     <span class="tick-item text-white">EST. INDUSTRY REVENUE: ₹${totalRev} CR</span>
     <span class="tick-sep">◆</span>
-    <span class="tick-item text-cyan">DATA SOURCE: AMFI INDIA &nbsp;|&nbsp; PIPELINE: 15 JUN 2026 18:19:54 IST</span>
+    <span class="tick-item text-cyan">DATA SOURCE: AMFI INDIA &nbsp;|&nbsp; PIPELINE: ${lastRun}</span>
     <span class="tick-sep">◆</span>
   `;
 }
@@ -1367,6 +1377,7 @@ function updateOverviewKPIs() {
   const top5Share = RANKINGS.slice(0,5).reduce((s,r)=>s+r.share,0).toFixed(2);
   const totalRev = REVENUE.length ? REVENUE.reduce((s,r)=>s+r.rev,0).toFixed(0) : '--';
   const amcCount = RANKINGS.length;
+  const schemeCount = document.getElementById('schemeCountDisplay').textContent || '--';
 
   document.getElementById('overview-kpi-body').innerHTML = `
     <div class="kpi-grid">
@@ -1382,7 +1393,7 @@ function updateOverviewKPIs() {
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Active Schemes</div>
-        <div class="kpi-value">14,212</div>
+        <div class="kpi-value">${schemeCount}</div>
         <div class="kpi-sub">incl. all categories</div>
       </div>
       <div class="kpi-card kpi-card-wide">
@@ -1557,7 +1568,7 @@ function initOverviewCharts() {
         labelLine:{lineStyle:{color:'#333'}},
         data:[
           ...RANKINGS.slice(0,10).map((r,i)=>({name:r.name, value:r.aum, itemStyle:{color:AMC_PALETTE[i]}})),
-          {name:'Rest (41 AMCs)', value:restAum, itemStyle:{color:'#222222'}},
+          {name:'Rest', value:restAum, itemStyle:{color:'#222222'}},
         ]
       }]
     }));
@@ -1659,7 +1670,7 @@ function renderConcDonut() {
         {name:'Top 3',  value:t3,   itemStyle:{color:'#FFB000'}},
         {name:'#4–5',   value:t5,   itemStyle:{color:'#00CCCC'}},
         {name:'#6–10',  value:t10,  itemStyle:{color:'#4488FF'}},
-        {name:'Rest 41',value:rest, itemStyle:{color:'#1a1a1a'}},
+        {name:'Rest',value:rest, itemStyle:{color:'#1a1a1a'}},
       ]
     }]
   }));
@@ -1672,7 +1683,7 @@ function renderHistList(key, elId, path) {
   el.innerHTML = files.map(f =>
     `<div style="display:flex; justify-content:space-between; padding:2px 4px; border-bottom:1px solid #111; font-family:var(--font-mono); font-size:9px; color:var(--term-grey);">
       <span>${f}</span>
-      <span style="color:var(--term-amber); cursor:pointer;" onclick="alert('File: ${path}${f}\\nOpen from project directory.')">↗</span>
+      <span style="color:var(--term-amber); cursor:pointer;" onclick="downloadFile('${path}${f}', '${f}')">↗ Open</span>
     </div>`
   ).join('');
 }
@@ -1753,7 +1764,7 @@ function renderMsPie() {
       labelLine:{lineStyle:{color:'#333'}},
       data:[
         ...RANKINGS.slice(0,10).map((r,i)=>({name:r.name,value:r.share,itemStyle:{color:AMC_PALETTE[i]}})),
-        {name:'Rest 41',value:restShare,itemStyle:{color:'#1a1a1a'}},
+        {name:'Rest',value:restShare,itemStyle:{color:'#1a1a1a'}},
       ]
     }]
   }));
@@ -1892,7 +1903,7 @@ function renderRevPie() {
       labelLine:{lineStyle:{color:'#333'}},
       data:[
         ...REVENUE.slice(0,5).map((r,i)=>({name:r.name,value:r.rev,itemStyle:{color:AMC_PALETTE[i]}})),
-        {name:'Rest 46',value:restRev,itemStyle:{color:'#1a1a1a'}},
+        {name:'Rest',value:restRev,itemStyle:{color:'#1a1a1a'}},
       ]
     }]
   }));
@@ -2021,153 +2032,63 @@ function renderAmcForecast() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   EXPLORER (static data kept for now)
+   EXPLORER (fully dynamic)
    ═══════════════════════════════════════════════════════ */
-const NAV_DATA = [
-  {code:'100033',name:'Aditya Birla Sun Life Large & Mid Cap Fund - Regular Growth',nav:896.58,date:'2026-06-12',isin:'INF209K01165'},
-  {code:'100034',name:'Aditya Birla Sun Life Large & Mid Cap Fund - Regular IDCW',nav:130.58,date:'2026-06-12',isin:'INF209K01157'},
-  {code:'100035',name:'Aditya Birla Sun Life India GenNext Fund - Regular Growth',nav:247.99,date:'2026-06-12',isin:'INF209K01199'},
-  {code:'100037',name:'Aditya Birla Sun Life MNC Fund - Regular Growth',nav:1198.47,date:'2026-06-12',isin:'INF209K01322'},
-  {code:'100038',name:'Aditya Birla Sun Life New Millennium Fund - Regular Growth',nav:97.54,date:'2026-06-12',isin:'INF209K01330'},
-  {code:'100040',name:'Aditya Birla Sun Life Tax Relief 96 - Regular Growth',nav:64.55,date:'2026-06-12',isin:'INF209K01298'},
-  {code:'100270',name:'Franklin India Bluechip Fund - Growth',nav:1092.47,date:'2026-06-12',isin:'INF090I01239'},
-  {code:'100270',name:'Franklin India Prima Fund - Growth',nav:2644.11,date:'2026-06-12',isin:'INF090I01247'},
-  {code:'100305',name:'HDFC Balanced Advantage Fund - Regular Growth',nav:547.91,date:'2026-06-12',isin:'INF179KB1DR1'},
-  {code:'100306',name:'HDFC Flexi Cap Fund - Regular Growth',nav:2024.83,date:'2026-06-12',isin:'INF179K01AS0'},
-  {code:'100307',name:'HDFC Top 100 Fund - Regular Growth',nav:1163.74,date:'2026-06-12',isin:'INF179K01AT8'},
-  {code:'100308',name:'HDFC Mid-Cap Opportunities Fund - Regular Growth',nav:295.22,date:'2026-06-12',isin:'INF179K01BE7'},
-  {code:'100309',name:'HDFC Small Cap Fund - Regular Growth',nav:165.45,date:'2026-06-12',isin:'INF179K01BO6'},
-  {code:'100310',name:'HDFC ELSS Tax Saver Fund - Regular Growth',nav:1421.92,date:'2026-06-12',isin:'INF179K01AU6'},
-  {code:'100311',name:'HDFC Large and Mid Cap Fund - Regular Growth',nav:474.49,date:'2026-06-12',isin:'INF179KB1CL5'},
-  {code:'100312',name:'HDFC Focused 30 Fund - Regular Growth',nav:194.70,date:'2026-06-12',isin:'INF179K01AV4'},
-  {code:'120503',name:'Nippon India Large Cap Fund - Regular Growth',nav:98.03,date:'2026-06-12',isin:'INF204K01EZ9'},
-  {code:'120504',name:'Nippon India Mid Cap Fund - Regular Growth',nav:483.44,date:'2026-06-12',isin:'INF204K01FD3'},
-  {code:'120505',name:'Nippon India Small Cap Fund - Regular Growth',nav:231.54,date:'2026-06-12',isin:'INF204K01ED6'},
-  {code:'120506',name:'Nippon India Flexi Cap Fund - Regular Growth',nav:167.92,date:'2026-06-12',isin:'INF204KB1IA4'},
-  {code:'119551',name:'SBI Blue Chip Fund - Regular Growth',nav:112.78,date:'2026-06-12',isin:'INF200K01RB2'},
-  {code:'119552',name:'SBI Magnum Mid Cap Fund - Regular Growth',nav:285.93,date:'2026-06-12',isin:'INF200K01527'},
-  {code:'119553',name:'SBI Small Cap Fund - Regular Growth',nav:213.55,date:'2026-06-12',isin:'INF200K01RA4'},
-  {code:'119554',name:'SBI Contra Fund - Regular Growth',nav:427.16,date:'2026-06-12',isin:'INF200K01521'},
-  {code:'119555',name:'SBI ELSS Tax Saver Fund - Regular Growth',nav:378.42,date:'2026-06-12',isin:'INF200K01BK2'},
-];
-
-const TER_DATA = [
-  {code:'360O/O/H/BHF/23/07/0007',name:'360 ONE Balanced Hybrid Fund',type:'Open Ended',cat:'Hybrid - Balanced',date:'2026-06-01',reg:2.10,dir:0.54},
-  {code:'ABSL/O/E/LC/02/01/0001',name:'Aditya Birla Sun Life Large Cap Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.72,dir:0.62},
-  {code:'ABSL/O/E/MC/02/01/0002',name:'Aditya Birla Sun Life Mid Cap Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.88,dir:0.71},
-  {code:'ABSL/O/D/LF/02/01/0003',name:'Aditya Birla Sun Life Liquid Fund',type:'Open Ended',cat:'Debt - Liquid',date:'2026-06-01',reg:0.22,dir:0.09},
-  {code:'HDFC/O/E/FC/03/01/0001',name:'HDFC Flexi Cap Fund',type:'Open Ended',cat:'Equity - Flexi Cap',date:'2026-06-01',reg:1.52,dir:0.52},
-  {code:'HDFC/O/E/LC/03/01/0002',name:'HDFC Top 100 Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.65,dir:0.55},
-  {code:'HDFC/O/E/MC/03/01/0003',name:'HDFC Mid-Cap Opportunities Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.72,dir:0.59},
-  {code:'HDFC/O/E/SC/03/01/0004',name:'HDFC Small Cap Fund',type:'Open Ended',cat:'Equity - Small Cap',date:'2026-06-01',reg:1.83,dir:0.62},
-  {code:'SBI/O/E/BC/04/01/0001',name:'SBI Blue Chip Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.58,dir:0.54},
-  {code:'SBI/O/E/MC/04/01/0002',name:'SBI Magnum Mid Cap Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.79,dir:0.63},
-  {code:'SBI/O/E/SC/04/01/0003',name:'SBI Small Cap Fund',type:'Open Ended',cat:'Equity - Small Cap',date:'2026-06-01',reg:1.93,dir:0.72},
-  {code:'ICICI/O/E/LC/05/01/0001',name:'ICICI Pru Bluechip Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.67,dir:0.57},
-  {code:'ICICI/O/E/MC/05/01/0002',name:'ICICI Pru Midcap Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.89,dir:0.73},
-  {code:'ICICI/O/D/LF/05/01/0003',name:'ICICI Pru Liquid Fund',type:'Open Ended',cat:'Debt - Liquid',date:'2026-06-01',reg:0.19,dir:0.08},
-  {code:'NIP/O/E/LC/06/01/0001',name:'Nippon India Large Cap Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.71,dir:0.58},
-  {code:'NIP/O/E/MC/06/01/0002',name:'Nippon India Mid Cap Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.87,dir:0.69},
-  {code:'NIP/O/E/SC/06/01/0003',name:'Nippon India Small Cap Fund',type:'Open Ended',cat:'Equity - Small Cap',date:'2026-06-01',reg:1.95,dir:0.74},
-  {code:'KMF/O/H/BAF/07/01/0001',name:'Kotak Balanced Advantage Fund',type:'Open Ended',cat:'Hybrid - BAF',date:'2026-06-01',reg:1.63,dir:0.56},
-  {code:'KMF/O/E/FC/07/01/0002',name:'Kotak Flexi Cap Fund',type:'Open Ended',cat:'Equity - Flexi Cap',date:'2026-06-01',reg:1.68,dir:0.59},
-  {code:'AXIS/O/E/FC/08/01/0001',name:'Axis Flexi Cap Fund',type:'Open Ended',cat:'Equity - Flexi Cap',date:'2026-06-01',reg:1.70,dir:0.56},
-  {code:'AXIS/O/E/SG/08/01/0002',name:'Axis Small Cap Fund',type:'Open Ended',cat:'Equity - Small Cap',date:'2026-06-01',reg:1.86,dir:0.63},
-  {code:'PPFAS/O/E/FC/09/01/0001',name:'Parag Parikh Flexi Cap Fund',type:'Open Ended',cat:'Equity - Flexi Cap',date:'2026-06-01',reg:1.57,dir:0.45},
-  {code:'MIRAE/O/E/LC/10/01/0001',name:'Mirae Asset Large Cap Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.62,dir:0.51},
-  {code:'MIRAE/O/E/EM/10/01/0002',name:'Mirae Asset Emerging Bluechip Fund',type:'Open Ended',cat:'Equity - Large & Mid Cap',date:'2026-06-01',reg:1.79,dir:0.62},
-];
-
-const AUM_DATA = [
-  {name:'360 ONE',aum:13193.88,month:'January - March 2026'},
-  {name:'Abakkus',aum:3129.47,month:'January - March 2026'},
-  {name:'Aditya Birla Sun Life',aum:435865.96,month:'January - March 2026'},
-  {name:'Angel One',aum:419.31,month:'January - March 2026'},
-  {name:'Axis',aum:359601.25,month:'January - March 2026'},
-  {name:'Bajaj Finserv',aum:30626.57,month:'January - March 2026'},
-  {name:'Bandhan',aum:195325.09,month:'January - March 2026'},
-  {name:'Bank of India',aum:14170.87,month:'January - March 2026'},
-  {name:'Baroda BNP Paribas',aum:54607.95,month:'January - March 2026'},
-  {name:'Canara Robeco',aum:117482.94,month:'January - March 2026'},
-  {name:'Choice',aum:69.43,month:'January - March 2026'},
-  {name:'DSP',aum:225399.63,month:'January - March 2026'},
-  {name:'Edelweiss',aum:165670.21,month:'January - March 2026'},
-  {name:'Franklin Templeton',aum:123574.21,month:'January - March 2026'},
-  {name:'Groww',aum:4181.25,month:'January - March 2026'},
-  {name:'HDFC',aum:927451.27,month:'January - March 2026'},
-  {name:'HSBC',aum:136057.85,month:'January - March 2026'},
-  {name:'Helios',aum:9400.54,month:'January - March 2026'},
-  {name:'ICICI Prudential',aum:1103751.32,month:'January - March 2026'},
-  {name:'IL&FS',aum:911.25,month:'January - March 2026'},
-  {name:'ITI',aum:10825.14,month:'January - March 2026'},
-  {name:'Invesco',aum:140647.77,month:'January - March 2026'},
-  {name:'JM Financial',aum:13219.24,month:'January - March 2026'},
-  {name:'Jio BlackRock',aum:16711.52,month:'January - March 2026'},
-  {name:'Kotak Mahindra',aum:580950.24,month:'January - March 2026'},
-  {name:'LIC',aum:46461.19,month:'January - March 2026'},
-  {name:'Mahindra Manulife',aum:33126.68,month:'January - March 2026'},
-  {name:'Mirae Asset',aum:221354.56,month:'January - March 2026'},
-  {name:'Motilal Oswal',aum:131741.95,month:'January - March 2026'},
-  {name:'NJ',aum:6965.17,month:'January - March 2026'},
-  {name:'Navi',aum:9007.33,month:'January - March 2026'},
-  {name:'Nippon India',aum:724965.14,month:'January - March 2026'},
-  {name:'Old Bridge',aum:2566.10,month:'January - March 2026'},
-  {name:'PGIM India',aum:26401.19,month:'January - March 2026'},
-  {name:'PPFAS',aum:152328.16,month:'January - March 2026'},
-  {name:'Quantum',aum:3229.65,month:'January - March 2026'},
-  {name:'SBI',aum:1248003.01,month:'January - March 2026'},
-  {name:'Samco',aum:2532.11,month:'January - March 2026'},
-  {name:'Shriram',aum:1255.48,month:'January - March 2026'},
-  {name:'Sundaram',aum:74882.97,month:'January - March 2026'},
-  {name:'Tata',aum:227511.98,month:'January - March 2026'},
-  {name:'Taurus',aum:977.53,month:'January - March 2026'},
-  {name:'The Wealth Company',aum:1403.72,month:'January - March 2026'},
-  {name:'Trust',aum:4252.96,month:'January - March 2026'},
-  {name:'UTI',aum:388469.81,month:'January - March 2026'},
-  {name:'Unifi',aum:1440.33,month:'January - March 2026'},
-  {name:'Union',aum:26194.06,month:'January - March 2026'},
-  {name:'WhiteOak Capital',aum:33023.59,month:'January - March 2026'},
-  {name:'Zerodha',aum:13793.01,month:'January - March 2026'},
-  {name:'quant',aum:88362.54,month:'January - March 2026'},
-  {name:'Capitalmind',aum:472.11,month:'January - March 2026'},
-];
-
-// Explorer functions (still use static data)
 let expDs = 'nav';
+let explorerData = [];
+let histSortOrder = 'desc'; // 'asc' or 'desc'
 
 function initExplorer() {
   expSetDs('nav');
 }
 
-function expSetDs(ds) {
+async function expSetDs(ds) {
   expDs = ds;
   document.querySelectorAll('.explorer-ds-btn').forEach(b=>b.classList.remove('active'));
   const btn = document.getElementById('exp-btn-'+ds);
   if (btn) btn.classList.add('active');
-  renderExplorer(ds);
+  await renderExplorer(ds);
 }
 
-function renderExplorer(ds) {
+async function renderExplorer(ds) {
   const title = document.getElementById('exp-title');
   const tag   = document.getElementById('exp-tag');
   const content = document.getElementById('exp-content');
   const searchRow = document.getElementById('exp-search-row');
 
-  if (ds === 'nav') {
-    title.textContent = '▌ NAV Snapshot — 12 Jun 2026';
-    tag.textContent = '14,212 RECORDS (SHOWING SAMPLE)';
+  content.innerHTML = '<div style="color:var(--term-grey); font-family:var(--font-mono); font-size:10px; text-align:center; margin-top:40px;">Loading data...</div>';
+
+  if (ds === 'nav' || ds === 'ter' || ds === 'aum') {
     searchRow.style.display = '';
-    renderNavTable(NAV_DATA);
-  } else if (ds === 'ter') {
-    title.textContent = '▌ Expense Ratios (TER) — Jun 2026';
-    tag.textContent = 'REGULAR & DIRECT';
-    searchRow.style.display = '';
-    renderTerTable(TER_DATA);
-  } else if (ds === 'aum') {
-    title.textContent = '▌ AUM (Processed) — Jan–Mar 2026';
-    tag.textContent = '51 AMCs';
-    searchRow.style.display = '';
-    renderAumTable(AUM_DATA);
+    let path = '';
+    if (ds === 'nav') path = latestPaths.nav_snapshot;
+    else if (ds === 'ter') path = latestPaths.expense_ratio;
+    else path = latestPaths.aum_processed;
+
+    if (!path) {
+      content.innerHTML = '<div style="color:var(--term-red); font-family:var(--font-mono); font-size:10px; text-align:center; margin-top:40px;">File path not available in manifest.</div>';
+      return;
+    }
+
+    try {
+      const raw = await fetchCSV(path);
+      explorerData = raw;
+      if (ds === 'nav') {
+        title.textContent = '▌ NAV Snapshot — ' + (path.split('/').pop() || '');
+        tag.textContent = raw.length + ' RECORDS';
+        renderNavTable(raw.slice(0, 200));
+      } else if (ds === 'ter') {
+        title.textContent = '▌ Expense Ratios (TER) — ' + (path.split('/').pop() || '');
+        tag.textContent = raw.length + ' SCHEMES';
+        renderTerTable(raw.slice(0, 200));
+      } else {
+        title.textContent = '▌ AUM (Processed) — ' + (path.split('/').pop() || '');
+        tag.textContent = raw.length + ' AMCs';
+        renderAumTable(raw);
+      }
+    } catch (e) {
+      content.innerHTML = `<div style="color:var(--term-red); font-family:var(--font-mono); font-size:10px; text-align:center; margin-top:40px;">Failed to load: ${e.message}</div>`;
+    }
   } else if (ds.startsWith('hist-')) {
     searchRow.style.display = 'none';
     const map = {
@@ -2178,20 +2099,38 @@ function renderExplorer(ds) {
     };
     const m = map[ds];
     title.textContent = `▌ ${m.t} — Historical Files`;
-    tag.textContent = `${histFiles[m.key] ? histFiles[m.key].length : 0} FILES`;
+    let files = histFiles[m.key] || [];
+    // Sort files based on histSortOrder
+    if (histSortOrder === 'asc') {
+      files = [...files].sort();
+    } else {
+      files = [...files].sort().reverse();
+    }
+    tag.textContent = `${files.length} FILES`;
     content.innerHTML = `
-      <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:8px; padding:4px; border:1px solid #222; background:#050505;">
-        PATH: ${m.path}<br/>All files generated by pipeline runs. Click ↗ to navigate to file location.
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); padding:4px; border:1px solid #222; background:#050505; flex:1;">
+          PATH: ${m.path}<br/>All files generated by pipeline runs. Click ↗ to download.
+        </div>
+        <button class="dl-btn" onclick="toggleHistSort()" style="white-space:nowrap;">
+          ${histSortOrder === 'desc' ? '▲ Newest first' : '▼ Oldest first'}
+        </button>
       </div>
-      ${(histFiles[m.key] || []).map(f=>`
+      ${files.map(f=>`
         <div class="nav-result-row" style="cursor:default;">
           <span class="nav-name">${f}</span>
           <span class="nav-date">${extractTimestamp(f)}</span>
-          <span class="nav-val" style="cursor:pointer; color:var(--term-amber);" onclick="alert('File: ${m.path}${f}')">↗ Open</span>
+          <span class="nav-val" style="cursor:pointer; color:var(--term-amber);" onclick="downloadFile('${m.path}${f}', '${f}')">↗ Open</span>
         </div>
       `).join('')}
     `;
   }
+}
+
+function toggleHistSort() {
+  histSortOrder = histSortOrder === 'desc' ? 'asc' : 'desc';
+  // Re-render current historical view
+  renderExplorer(expDs);
 }
 
 function extractTimestamp(filename) {
@@ -2205,19 +2144,18 @@ function extractTimestamp(filename) {
 function renderNavTable(data) {
   document.getElementById('exp-content').innerHTML = `
     <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">
-      Showing ${data.length} of 14,212 schemes. Full data in nav_snapshot_20260615_182120.csv
+      Showing first ${data.length} records. Full dataset has ${explorerData.length} schemes.
     </div>
     <table class="data-table">
       <thead><tr>
-        <th>Code</th><th>Scheme Name</th><th>NAV Date</th><th style="text-align:right;">NAV (₹)</th><th>ISIN</th>
+        <th>Scheme Code</th><th>Scheme Name</th><th>NAV Date</th><th style="text-align:right;">NAV (₹)</th>
       </tr></thead>
       <tbody>
         ${data.map(r=>`<tr>
-          <td style="color:var(--term-grey); font-size:9px;">${r.code}</td>
-          <td class="td-name" style="font-size:10px;">${r.name}</td>
-          <td style="color:var(--term-grey); font-size:9px;">${r.date}</td>
-          <td class="td-num">₹${r.nav.toFixed(2)}</td>
-          <td style="color:var(--term-grey); font-size:9px;">${r.isin}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.scheme_code || r.code || ''}</td>
+          <td class="td-name" style="font-size:10px;">${r.scheme_name || r.name || ''}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.nav_date || r.date || ''}</td>
+          <td class="td-num">₹${parseFloat(r.nav).toFixed(2)}</td>
         </tr>`).join('')}
       </tbody>
     </table>`;
@@ -2226,20 +2164,19 @@ function renderNavTable(data) {
 function renderTerTable(data) {
   document.getElementById('exp-content').innerHTML = `
     <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">
-      Showing ${data.length} schemes. Full TER data in expense_ratio_clean_June_2026_20260615_182117.csv
+      Showing first ${data.length} records. Full dataset has ${explorerData.length} schemes.
     </div>
     <table class="data-table">
       <thead><tr>
-        <th>Scheme</th><th>Category</th><th>Date</th>
+        <th>Scheme Name</th><th>Category</th>
         <th style="text-align:right;">Regular TER%</th><th style="text-align:right;">Direct TER%</th>
       </tr></thead>
       <tbody>
         ${data.map(r=>`<tr>
-          <td class="td-name" style="font-size:10px;">${r.name}</td>
-          <td style="color:var(--term-grey); font-size:9px;">${r.cat}</td>
-          <td style="color:var(--term-grey); font-size:9px;">${r.date}</td>
-          <td style="text-align:right; color:var(--term-amber);">${r.reg.toFixed(2)}%</td>
-          <td style="text-align:right; color:var(--term-green);">${r.dir.toFixed(2)}%</td>
+          <td class="td-name" style="font-size:10px;">${r.scheme_name || r.name || ''}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.scheme_category || r.cat || ''}</td>
+          <td style="text-align:right; color:var(--term-amber);">${parseFloat(r.regular_ter).toFixed(2)}%</td>
+          <td style="text-align:right; color:var(--term-green);">${parseFloat(r.direct_ter).toFixed(2)}%</td>
         </tr>`).join('')}
       </tbody>
     </table>`;
@@ -2248,18 +2185,17 @@ function renderTerTable(data) {
 function renderAumTable(data) {
   document.getElementById('exp-content').innerHTML = `
     <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">
-      ${data.length} AMCs | Period: January - March 2026 | Source: aum_clean_January_March_2026_20260615_182034.csv
+      ${data.length} AMCs loaded dynamically.
     </div>
     <table class="data-table">
       <thead><tr>
-        <th>AMC Name</th><th>Period</th><th style="text-align:right;">AUM (₹ Cr)</th><th style="text-align:right;">AUM (₹ L Cr)</th>
+        <th>AMC Name</th><th>Period</th><th style="text-align:right;">AUM (₹ Cr)</th>
       </tr></thead>
       <tbody>
-        ${[...data].sort((a,b)=>b.aum-a.aum).map(r=>`<tr>
-          <td class="td-name">${r.name}</td>
-          <td style="color:var(--term-grey); font-size:9px;">${r.month}</td>
-          <td class="td-num">${r.aum.toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
-          <td class="td-num" style="color:var(--term-amber);">${(r.aum/100000).toFixed(4)}</td>
+        ${[...data].sort((a,b)=> (parseFloat(b.aum)||0) - (parseFloat(a.aum)||0)).map(r=>`<tr>
+          <td class="td-name">${r.amc_name || r.name || ''}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.period || r.month || ''}</td>
+          <td class="td-num">${parseFloat(r.aum).toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
         </tr>`).join('')}
       </tbody>
     </table>`;
@@ -2267,12 +2203,24 @@ function renderAumTable(data) {
 
 function filterExplorer() {
   const q = document.getElementById('expSearch').value.toLowerCase();
-  if (expDs === 'nav')
-    renderNavTable(NAV_DATA.filter(r=>r.name.toLowerCase().includes(q)||r.code.includes(q)||r.isin.toLowerCase().includes(q)));
-  else if (expDs === 'ter')
-    renderTerTable(TER_DATA.filter(r=>r.name.toLowerCase().includes(q)||r.cat.toLowerCase().includes(q)));
-  else if (expDs === 'aum')
-    renderAumTable(AUM_DATA.filter(r=>r.name.toLowerCase().includes(q)));
+  if (expDs === 'nav') {
+    const filtered = explorerData.filter(r => 
+      (r.scheme_name||r.name||'').toLowerCase().includes(q) || 
+      (r.scheme_code||r.code||'').toLowerCase().includes(q)
+    );
+    renderNavTable(filtered.slice(0, 200));
+  } else if (expDs === 'ter') {
+    const filtered = explorerData.filter(r => 
+      (r.scheme_name||r.name||'').toLowerCase().includes(q) ||
+      (r.scheme_category||r.cat||'').toLowerCase().includes(q)
+    );
+    renderTerTable(filtered.slice(0, 200));
+  } else if (expDs === 'aum') {
+    const filtered = explorerData.filter(r => 
+      (r.amc_name||r.name||'').toLowerCase().includes(q)
+    );
+    renderAumTable(filtered);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
