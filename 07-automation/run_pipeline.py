@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 import psutil
 
@@ -268,6 +268,7 @@ class PipelineWorker(QThread):
         stages: list[PipelineStage],
         verbose: bool,
         parent: QObject | None = None,
+        pre_push_callback: Optional[Callable[[], None]] = None,
     ) -> None:
         super().__init__(parent)
         self.stages  = stages
@@ -275,6 +276,7 @@ class PipelineWorker(QThread):
         self._kill_requested = threading.Event()
         self._current_proc: Optional[subprocess.Popen] = None
         self._results: list[StageResult] = []
+        self._pre_push_callback = pre_push_callback
 
     def request_kill(self) -> None:
         self._kill_requested.set()
@@ -291,6 +293,26 @@ class PipelineWorker(QThread):
         for stage in self.stages:
             if self._kill_requested.is_set():
                 break
+
+            # If the next stage is push, generate the manifest first
+            if stage.index == 12 and self._pre_push_callback:
+                try:
+                    self._pre_push_callback()
+                except Exception as exc:
+                    self._emit("log_line", ("Pipeline", f"Manifest generation failed: {exc}", "stderr"))
+                    # Treat as stage failure for push
+                    result = StageResult(
+                        stage=stage,
+                        status=StageStatus.FAILED,
+                        stdout="",
+                        stderr=f"Manifest generation error: {exc}",
+                        duration_seconds=0.0,
+                        started_at=datetime.now(),
+                        ended_at=datetime.now(),
+                    )
+                    self._results.append(result)
+                    self._emit("stage_end", result)
+                    break
 
             self._emit("stage_start", stage)
             result = self._run_stage(stage)
@@ -948,7 +970,13 @@ class MainWindow(QMainWindow):
         self._timer.start()
 
         verbose = self._verbose_toggle.isChecked()
-        self._worker = PipelineWorker(PIPELINE_STAGES, verbose, parent=self)
+        # Pass the manifest generation callback to the worker
+        self._worker = PipelineWorker(
+            PIPELINE_STAGES,
+            verbose,
+            parent=self,
+            pre_push_callback=self._generate_pipeline_state,
+        )
         self._worker.message_ready.connect(self._handle_message)
         self._worker.finished.connect(self._on_worker_finished)
         self._worker.start()
@@ -1000,7 +1028,7 @@ class MainWindow(QMainWindow):
         elif kind == "pipeline_completed":
             self._set_pipeline_status(PipelineStatus.COMPLETED)
             self._export_logs(PipelineStatus.COMPLETED)
-            self._generate_pipeline_state()
+            # Manifest was generated before push, so we don't need to generate again
 
         elif kind == "pipeline_failed":
             self._set_pipeline_status(PipelineStatus.FAILED)
@@ -1086,8 +1114,7 @@ class MainWindow(QMainWindow):
     def _generate_pipeline_state(self) -> None:
         """
         Generate all‑encompassing data_manifest.json containing:
-          - latest file paths for every dataset (rankings, revenue, forecast AUM,
-            forecast revenue, market share, nav snapshot, expense ratio, aum processed)
+          - latest file paths for every dataset
           - full historical file lists per directory
           - metadata: last run timestamp, AMC count, scheme count
         """
@@ -1108,7 +1135,6 @@ class MainWindow(QMainWindow):
             if dir_path.is_dir():
                 files = sorted([f.name for f in dir_path.glob("*.csv")])
                 manifest["historical_files"][key] = files
-                # Prefer _latest.csv, otherwise the last sorted file
                 latest = next((f for f in files if f.endswith("_latest.csv")), None)
                 if latest:
                     manifest["latest"][key] = f"{rel_dir}/{latest}"
@@ -1123,7 +1149,6 @@ class MainWindow(QMainWindow):
             forecast_files = sorted([f.name for f in forecast_dir.glob("*.csv")])
             manifest["historical_files"]["forecast"] = forecast_files
 
-            # forecast AUM latest
             aum_latest = next((f for f in forecast_files
                                if f.startswith("forecast_aum") and f.endswith("_latest.csv")), None)
             if not aum_latest:
@@ -1131,7 +1156,6 @@ class MainWindow(QMainWindow):
                 aum_latest = aum_files[-1] if aum_files else None
             manifest["latest"]["forecast_aum"] = f"data/exports/forecasting/{aum_latest}" if aum_latest else None
 
-            # forecast revenue latest
             rev_latest = next((f for f in forecast_files
                                if f.startswith("forecast_revenue") and f.endswith("_latest.csv")), None)
             if not rev_latest:
@@ -1152,10 +1176,8 @@ class MainWindow(QMainWindow):
         for key, rel_dir in processed_dirs.items():
             dir_path = PROJECT_ROOT / rel_dir
             if dir_path.is_dir():
-                # Only CSV files (ignore .parquet, .txt, etc.)
                 files = sorted([f.name for f in dir_path.glob("*.csv")])
                 manifest["historical_files"][key] = files
-                # latest = last file (they are sorted by timestamp due to naming convention)
                 if files:
                     manifest["latest"][key] = f"{rel_dir}/{files[-1]}"
                 else:
@@ -1164,7 +1186,6 @@ class MainWindow(QMainWindow):
         # ── 4. Metadata ──────────────────────────────────────────────────
         manifest["metadata"]["last_run"] = datetime.now().strftime("%d %b %Y %H:%M:%S IST")
 
-        # AMC count from rankings
         rankings_latest = PROJECT_ROOT / "data/exports/rankings/amc_rankings_latest.csv"
         if rankings_latest.is_file():
             with open(rankings_latest, "r", encoding="utf-8") as f:
@@ -1174,7 +1195,6 @@ class MainWindow(QMainWindow):
         else:
             manifest["metadata"]["amc_count"] = 0
 
-        # Scheme count from most recent fund master
         fund_master_dir = PROJECT_ROOT / "data/processed/fund_master"
         if fund_master_dir.is_dir():
             master_files = sorted(fund_master_dir.glob("fund_master_*.csv"))
@@ -1188,7 +1208,6 @@ class MainWindow(QMainWindow):
         else:
             manifest["metadata"]["scheme_count"] = 0
 
-        # ── Write manifest ───────────────────────────────────────────────
         manifest_path = PROJECT_ROOT / "data_manifest.json"
         try:
             with open(manifest_path, "w", encoding="utf-8") as f:
