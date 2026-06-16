@@ -15,6 +15,7 @@ from __future__ import annotations
 # SECTION 1 — CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
+import json
 import os
 import queue
 import signal
@@ -52,9 +53,6 @@ except ImportError:
     )
 
 # ── Project root ────────────────────────────────────────────────────────────
-# This file lives in `07-automation/`, and every script referenced below
-# lives one level up, in the repo root (sibling to 01-data-ingestion,
-# 02-data-warehouse, etc.) — hence `.parent.parent`, not `.parent`.
 THIS_FILE    = Path(__file__).resolve()
 PROJECT_ROOT = THIS_FILE.parent.parent
 
@@ -63,27 +61,30 @@ PIPELINE_LOG_DIR   = PROJECT_ROOT / "data" / "exports" / "pipeline"
 SUCCESS_LOG_SUBDIR = "SUCCESS_RUN_LOGS"
 FAILED_LOG_SUBDIR  = "FAILED_RUN_LOGS"
 
+# ── Manifest path (Phase 1 – dynamic state) ────────────────────────────────
+PIPELINE_STATE_PATH = PROJECT_ROOT / "data_manifest.json"
+
 # ── Window ─────────────────────────────────────────────────────────────────
 WINDOW_TITLE  = "AMC Dashboard Pipeline"
 WINDOW_W      = 1400
 WINDOW_H      = 900
 
 # ── Palette — graphite dark-mode system ───────────────────────────────────
-C_BG           = "#0d0d0f"   # near-black base
-C_SURFACE      = "#141416"   # card background
-C_SURFACE_2    = "#1c1c1f"   # elevated card / sidebar
-C_BORDER       = "#2a2a2e"   # subtle dividers
+C_BG           = "#0d0d0f"
+C_SURFACE      = "#141416"
+C_SURFACE_2    = "#1c1c1f"
+C_BORDER       = "#2a2a2e"
 C_BORDER_SOFT  = "#222226"
 C_TEXT_PRIMARY = "#f0f0f3"
 C_TEXT_SECONDARY = "#8e8e96"
 C_TEXT_DIM     = "#4a4a52"
 
-C_BLUE         = "#3a86ff"   # primary action / running
+C_BLUE         = "#3a86ff"
 C_BLUE_HOVER   = "#5b9bff"
-C_GREEN        = "#30d158"   # success
-C_RED          = "#ff453a"   # failure / kill
-C_ORANGE       = "#ff9f0a"   # killed / warning
-C_GRAY         = "#636366"   # pending
+C_GREEN        = "#30d158"
+C_RED          = "#ff453a"
+C_ORANGE       = "#ff9f0a"
+C_GRAY         = "#636366"
 
 C_CONSOLE_BG   = "#0a0a0c"
 C_CONSOLE_TEXT = "#c8c8d0"
@@ -96,7 +97,6 @@ C_TIMESTAMP    = "#3a86ff"
 
 @dataclass
 class PipelineStage:
-    """Defines a single executable stage in the pipeline."""
     index: int
     label: str
     script_path: str          # relative to PROJECT_ROOT
@@ -113,18 +113,11 @@ PIPELINE_STAGES: list[PipelineStage] = [
     PipelineStage(9,  "Revenue Validation",       "04-revenue-model/validate_revenue.py"),
     PipelineStage(10, "AUM Forecast",             "05-forcasting/forecast_aum.py"),
     PipelineStage(11, "Revenue Forecast",         "05-forcasting/forecast_revenue.py"),
-    # ── NEW: Push latest results to GitHub ────────────────────────────────
     PipelineStage(12, "Push to GitHub",           "07-automation/push_to_github.py"),
 ]
 
 
 def find_missing_stages(stages: list[PipelineStage]) -> list[PipelineStage]:
-    """Return the subset of stages whose script file does not exist on disk.
-
-    Resolves each stage's script_path against PROJECT_ROOT so that path
-    mistakes (wrong root, typo'd folder names, renamed scripts) are caught
-    up front instead of surfacing as an opaque subprocess failure on stage 1.
-    """
     missing: list[PipelineStage] = []
     for stage in stages:
         script = PROJECT_ROOT / stage.script_path
@@ -174,7 +167,6 @@ PIPELINE_STATUS_COLORS: dict[PipelineStatus, str] = {
 
 @dataclass
 class StageResult:
-    """Captured output and timing for a single completed stage."""
     stage: PipelineStage
     status: StageStatus
     stdout: str = ""
@@ -189,8 +181,6 @@ class StageResult:
 # ══════════════════════════════════════════════════════════════════════════════
 
 class LogExporter:
-    """Writes structured pipeline log files to disk."""
-
     def export(
         self,
         results: list[StageResult],
@@ -199,11 +189,6 @@ class LogExporter:
         started_at: datetime,
         ended_at: datetime,
     ) -> Path:
-        """
-        Serialise pipeline results to a timestamped .log file.
-
-        Returns the path of the written file.
-        """
         subdir = (
             SUCCESS_LOG_SUBDIR
             if pipeline_status == PipelineStatus.COMPLETED
@@ -264,11 +249,10 @@ class LogExporter:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SECTION 6 — WORKER THREAD (Pipeline execution in background)
+# SECTION 6 — WORKER THREAD
 # ══════════════════════════════════════════════════════════════════════════════
 
 class PipelineMessage:
-    """Typed message passed from worker thread to GUI via queue."""
     __slots__ = ("kind", "payload")
     def __init__(self, kind: str, payload: object = None) -> None:
         self.kind    = kind
@@ -276,17 +260,8 @@ class PipelineMessage:
 
 
 class PipelineWorker(QThread):
-    """
-    Runs each pipeline stage sequentially in a background QThread.
-
-    Signals
-    -------
-    message_ready : emitted for every status update / log line.
-    """
     message_ready = Signal(object)   # PipelineMessage
-
-    # Maximum seconds to wait for a single stage (adjust as needed)
-    STAGE_TIMEOUT_SECONDS = 3600  # 1 hour
+    STAGE_TIMEOUT_SECONDS = 3600
 
     def __init__(
         self,
@@ -301,18 +276,13 @@ class PipelineWorker(QThread):
         self._current_proc: Optional[subprocess.Popen] = None
         self._results: list[StageResult] = []
 
-    # ── Public API ─────────────────────────────────────────────────────────
-
     def request_kill(self) -> None:
-        """Signal the worker to stop at the next opportunity and kill the subprocess."""
         self._kill_requested.set()
         self._terminate_current_process()
 
     @property
     def results(self) -> list[StageResult]:
         return self._results
-
-    # ── Thread entry ───────────────────────────────────────────────────────
 
     def run(self) -> None:
         self._emit("pipeline_start")
@@ -341,16 +311,6 @@ class PipelineWorker(QThread):
         else:
             self._emit("pipeline_completed")
 
-    # ── Stage execution ────────────────────────────────────────────────────
-    #
-    # ** FIXED VERSION **
-    #  - Reads stdout and stderr concurrently via a daemon thread to prevent
-    #    pipe-buffer deadlocks.
-    #  - Redirects stdin to DEVNULL to avoid any input‑waiting hangs.
-    #  - Adds a timeout on proc.wait() and a kill on TimeoutExpired.
-    #  - Ensures proper cleanup even on errors.
-    # ────────────────────────────────────────────────────────────────────────
-
     def _run_stage(self, stage: PipelineStage) -> StageResult:
         script  = PROJECT_ROOT / stage.script_path
         started = datetime.now()
@@ -377,7 +337,7 @@ class PipelineWorker(QThread):
             proc = subprocess.Popen(
                 [sys.executable, str(script)],
                 cwd=str(PROJECT_ROOT),
-                stdin=subprocess.DEVNULL,          # prevent any stdin hang
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -393,7 +353,6 @@ class PipelineWorker(QThread):
             )
             self._current_proc = proc
 
-            # ── Daemon thread to drain stderr concurrently ────────────────
             def read_stderr():
                 try:
                     for line in proc.stderr:
@@ -404,13 +363,11 @@ class PipelineWorker(QThread):
                         if self.verbose and line.strip():
                             self._emit("log_line", (stage.label, line, "stderr"))
                 except ValueError:
-                    # pipe already closed
                     pass
 
             stderr_thread = threading.Thread(target=read_stderr, daemon=True)
             stderr_thread.start()
 
-            # ── Main thread: read stdout ──────────────────────────────────
             for line in proc.stdout:
                 if self._kill_requested.is_set():
                     break
@@ -419,24 +376,18 @@ class PipelineWorker(QThread):
                 if self.verbose or line.startswith(("PASS", "FAIL", "[", "=")):
                     self._emit("log_line", (stage.label, line, "stdout"))
 
-            # Close stdout – child will receive SIGPIPE/EPIPE if it tries to
-            # write further. This is safe because we have fully consumed it.
             proc.stdout.close()
-
-            # Wait for stderr drain to finish (with a guard timeout)
             stderr_thread.join(timeout=5.0)
             if not proc.stderr.closed:
                 proc.stderr.close()
 
-            # Wait for the process itself, with a safety timeout
             try:
                 proc.wait(timeout=self.STAGE_TIMEOUT_SECONDS)
             except subprocess.TimeoutExpired:
-                # Process did not finish in time; treat as killed
                 self._emit("log_line", (stage.label,
                     f"Stage timed out after {self.STAGE_TIMEOUT_SECONDS}s", "stderr"))
                 self._terminate_current_process()
-                proc.wait()  # final reaping
+                proc.wait()
                 self._current_proc = None
 
         except Exception as exc:
@@ -472,10 +423,7 @@ class PipelineWorker(QThread):
             ended_at=ended,
         )
 
-    # ── Process management ─────────────────────────────────────────────────
-
     def _terminate_current_process(self) -> None:
-        """Kill the running subprocess and all its children via psutil."""
         proc = self._current_proc
         if proc is None:
             return
@@ -493,12 +441,9 @@ class PipelineWorker(QThread):
 
     @staticmethod
     def _popen_kwargs() -> dict:
-        """Return OS-appropriate kwargs for subprocess.Popen process groups."""
         if sys.platform == "win32":
             return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
         return {"start_new_session": True}
-
-    # ── Internal emit ──────────────────────────────────────────────────────
 
     def _emit(self, kind: str, payload: object = None) -> None:
         self.message_ready.emit(PipelineMessage(kind, payload))
@@ -507,8 +452,6 @@ class PipelineWorker(QThread):
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 7 — GUI COMPONENTS
 # ══════════════════════════════════════════════════════════════════════════════
-
-# ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _label(
     text: str,
@@ -549,11 +492,7 @@ def _divider() -> QFrame:
     return line
 
 
-# ─── Stage Row Widget ─────────────────────────────────────────────────────────
-
 class StageRow(QWidget):
-    """A single pipeline stage row with dot indicator, name, and status badge."""
-
     def __init__(self, stage: PipelineStage, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.stage = stage
@@ -564,12 +503,10 @@ class StageRow(QWidget):
         layout.setContentsMargins(16, 0, 16, 0)
         layout.setSpacing(12)
 
-        # Stage number
         num = _label(f"{stage.index:02d}", 11, C_TEXT_DIM, mono=True)
         num.setFixedWidth(22)
         layout.addWidget(num)
 
-        # Dot indicator
         self._dot = QLabel("●")
         self._dot.setFixedWidth(16)
         font = QFont()
@@ -578,12 +515,10 @@ class StageRow(QWidget):
         self._dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._dot)
 
-        # Stage label
         name = _label(stage.label, 13, C_TEXT_PRIMARY)
         name.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         layout.addWidget(name)
 
-        # Status badge
         self._badge = QLabel("PENDING")
         self._badge.setFixedWidth(70)
         self._badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -614,11 +549,7 @@ class StageRow(QWidget):
         self._badge.setText(label)
 
 
-# ─── Toggle Switch ────────────────────────────────────────────────────────────
-
 class ToggleSwitch(QCheckBox):
-    """Pill-shaped ON/OFF toggle rendered via stylesheet."""
-
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setText("")
@@ -647,12 +578,8 @@ class ToggleSwitch(QCheckBox):
         """)
 
 
-# ─── Console Widget ───────────────────────────────────────────────────────────
-
 class ConsoleWidget(QPlainTextEdit):
-    """Terminal-style log console with timestamp prefixing and auto-scroll."""
-
-    MAX_BLOCKS = 5000   # performance ceiling
+    MAX_BLOCKS = 5000
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -706,13 +633,6 @@ class ConsoleWidget(QPlainTextEdit):
 # ══════════════════════════════════════════════════════════════════════════════
 
 class MainWindow(QMainWindow):
-    """
-    AMC Dashboard Pipeline main window.
-
-    Owns the pipeline worker thread, runtime timer, all UI widgets, and
-    the log export system.
-    """
-
     def __init__(self) -> None:
         super().__init__()
         self._worker: Optional[PipelineWorker] = None
@@ -727,14 +647,11 @@ class MainWindow(QMainWindow):
         self._connect_timer()
         self._run_startup_validation()
 
-    # ── Window setup ───────────────────────────────────────────────────────
-
     def _init_window(self) -> None:
         self.setWindowTitle(WINDOW_TITLE)
         self.resize(WINDOW_W, WINDOW_H)
         self.setMinimumSize(1000, 640)
 
-        # Centre on screen
         screen = QApplication.primaryScreen().geometry()
         x = (screen.width()  - WINDOW_W) // 2
         y = (screen.height() - WINDOW_H) // 2
@@ -766,8 +683,6 @@ class MainWindow(QMainWindow):
             }}
         """)
 
-    # ── UI construction ────────────────────────────────────────────────────
-
     def _build_ui(self) -> None:
         root = QWidget()
         self.setCentralWidget(root)
@@ -788,7 +703,6 @@ class MainWindow(QMainWindow):
         layout = QHBoxLayout(header)
         layout.setContentsMargins(28, 0, 28, 0)
 
-        # Title block
         title_col = QVBoxLayout()
         title_col.setSpacing(2)
         title_col.addWidget(_label("AMC Dashboard Pipeline", 18, C_TEXT_PRIMARY, bold=True))
@@ -797,7 +711,6 @@ class MainWindow(QMainWindow):
 
         layout.addStretch()
 
-        # Live clock
         self._clock_label = _label("", 13, C_TEXT_DIM, mono=True)
         self._update_clock()
         clock_timer = QTimer(self)
@@ -825,7 +738,6 @@ class MainWindow(QMainWindow):
             }}
         """)
 
-        # ── Left column ───────────────────────────────────────────────────
         left = QVBoxLayout()
         left.setContentsMargins(0, 0, 0, 0)
         left.setSpacing(14)
@@ -839,7 +751,6 @@ class MainWindow(QMainWindow):
         left_widget.setLayout(left)
         left_widget.setMinimumWidth(240)
 
-        # ── Centre column — stages ────────────────────────────────────────
         centre = QVBoxLayout()
         centre.setContentsMargins(0, 0, 0, 0)
         centre.setSpacing(0)
@@ -853,7 +764,6 @@ class MainWindow(QMainWindow):
         centre_widget.setLayout(centre)
         centre_widget.setMinimumWidth(300)
 
-        # ── Right column — console ────────────────────────────────────────
         right = QVBoxLayout()
         right.setContentsMargins(0, 0, 0, 0)
         right.setSpacing(0)
@@ -869,9 +779,6 @@ class MainWindow(QMainWindow):
         right_widget.setLayout(right)
         right_widget.setMinimumWidth(360)
 
-        # Console gets the lion's share of the window and absorbs resize
-        # changes; the side columns default to roughly their old widths but
-        # are now user-resizable via the splitter handles.
         splitter.addWidget(left_widget)
         splitter.addWidget(centre_widget)
         splitter.addWidget(right_widget)
@@ -882,8 +789,6 @@ class MainWindow(QMainWindow):
 
         outer.addWidget(splitter)
         return body
-
-    # ── Cards ──────────────────────────────────────────────────────────────
 
     def _build_status_card(self) -> QFrame:
         card = _card()
@@ -930,7 +835,6 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(_label("Controls", 11, C_TEXT_DIM, bold=True))
 
-        # Start button
         self._start_btn = QPushButton("▶  Start Pipeline")
         self._start_btn.setFixedHeight(44)
         self._start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -953,7 +857,6 @@ class MainWindow(QMainWindow):
         self._start_btn.clicked.connect(self._on_start)
         layout.addWidget(self._start_btn)
 
-        # Kill button
         self._kill_btn = QPushButton("✕  Kill Pipeline")
         self._kill_btn.setFixedHeight(40)
         self._kill_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -982,7 +885,6 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(_divider())
 
-        # Verbose toggle
         vrow = QHBoxLayout()
         vrow.setSpacing(10)
         vrow.addWidget(_label("Verbose Mode", 13, C_TEXT_PRIMARY))
@@ -1020,8 +922,6 @@ class MainWindow(QMainWindow):
         scroll_area.setWidget(container)
         return scroll_area
 
-    # ── Timer ──────────────────────────────────────────────────────────────
-
     def _connect_timer(self) -> None:
         self._timer.setInterval(1000)
         self._timer.timeout.connect(self._tick_runtime)
@@ -1035,8 +935,6 @@ class MainWindow(QMainWindow):
 
     def _update_clock(self) -> None:
         self._clock_label.setText(datetime.now().strftime("%A, %d %b %Y  %H:%M:%S"))
-
-    # ── Event handlers ─────────────────────────────────────────────────────
 
     def _on_start(self) -> None:
         missing = find_missing_stages(PIPELINE_STAGES)
@@ -1102,6 +1000,7 @@ class MainWindow(QMainWindow):
         elif kind == "pipeline_completed":
             self._set_pipeline_status(PipelineStatus.COMPLETED)
             self._export_logs(PipelineStatus.COMPLETED)
+            self._generate_pipeline_state()
 
         elif kind == "pipeline_failed":
             self._set_pipeline_status(PipelineStatus.FAILED)
@@ -1110,8 +1009,6 @@ class MainWindow(QMainWindow):
         elif kind == "pipeline_killed":
             self._set_pipeline_status(PipelineStatus.KILLED)
             self._export_logs(PipelineStatus.KILLED)
-
-    # ── Status helpers ─────────────────────────────────────────────────────
 
     def _set_pipeline_status(self, status: PipelineStatus) -> None:
         color = PIPELINE_STATUS_COLORS[status]
@@ -1127,12 +1024,7 @@ class MainWindow(QMainWindow):
             row.set_status(StageStatus.PENDING)
         self._set_pipeline_status(PipelineStatus.RUNNING)
 
-    # ── Validation ─────────────────────────────────────────────────────────
-
     def _run_startup_validation(self) -> None:
-        """Check every stage script exists as soon as the window opens, so a
-        broken PROJECT_ROOT or renamed folder is visible immediately rather
-        than discovered after pressing Start."""
         missing = find_missing_stages(PIPELINE_STAGES)
         if missing:
             self._console.append_system(
@@ -1155,8 +1047,6 @@ class MainWindow(QMainWindow):
             )
 
     def _show_validation_error(self, missing: list[PipelineStage]) -> None:
-        """Block the run and print a clear list of unresolved script paths,
-        instead of letting the worker fail noisily on the first stage."""
         self._console.clear()
         self._set_pipeline_status(PipelineStatus.FAILED)
         self._console.append_system("Pipeline validation failed", C_RED)
@@ -1171,8 +1061,6 @@ class MainWindow(QMainWindow):
             "Fix the paths in PIPELINE_STAGES or PROJECT_ROOT, then try again",
             C_TEXT_SECONDARY,
         )
-
-    # ── Log export ─────────────────────────────────────────────────────────
 
     def _export_logs(self, status: PipelineStatus) -> None:
         if self._worker is None:
@@ -1194,6 +1082,77 @@ class MainWindow(QMainWindow):
             self._console.append_system(f"Log export failed: {exc}", C_RED)
 
         self._print_summary(results, status)
+
+    def _generate_pipeline_state(self) -> None:
+        """
+        Generate data_manifest.json containing:
+          - paths to the latest CSV files for rankings, market_share, revenue, forecast
+          - full historical file lists per directory
+          - metadata: last run timestamp, AMC count, scheme count
+        """
+        manifest = {
+            "latest": {},
+            "historical_files": {},
+            "metadata": {}
+        }
+
+        # Directories to scan
+        export_dirs = {
+            "rankings": "data/exports/rankings",
+            "market_share": "data/exports/market_share",
+            "revenue": "data/exports/revenue",
+            "forecast": "data/exports/forecasting",
+        }
+        for key, rel_dir in export_dirs.items():
+            dir_path = PROJECT_ROOT / rel_dir
+            if dir_path.is_dir():
+                files = sorted([f.name for f in dir_path.glob("*.csv")])
+                manifest["historical_files"][key] = files
+                # Prefer _latest.csv, otherwise the last sorted file
+                latest = next((f for f in files if f.endswith("_latest.csv")), None)
+                if latest:
+                    manifest["latest"][key] = f"{rel_dir}/{latest}"
+                elif files:
+                    manifest["latest"][key] = f"{rel_dir}/{files[-1]}"
+                else:
+                    manifest["latest"][key] = None
+
+        # Metadata
+        manifest["metadata"]["last_run"] = datetime.now().strftime("%d %b %Y %H:%M:%S IST")
+
+        # AMC count from rankings
+        rankings_latest = PROJECT_ROOT / "data/exports/rankings/amc_rankings_latest.csv"
+        if rankings_latest.is_file():
+            with open(rankings_latest, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+                # Subtract header
+                amc_count = len(lines) - 1 if lines else 0
+                manifest["metadata"]["amc_count"] = max(0, amc_count)
+        else:
+            manifest["metadata"]["amc_count"] = 0
+
+        # Scheme count from most recent fund master
+        fund_master_dir = PROJECT_ROOT / "data/processed/fund_master"
+        if fund_master_dir.is_dir():
+            master_files = sorted(fund_master_dir.glob("fund_master_*.csv"))
+            if master_files:
+                latest_master = master_files[-1]
+                with open(latest_master, "r", encoding="utf-8") as f:
+                    line_count = sum(1 for _ in f)
+                    manifest["metadata"]["scheme_count"] = max(0, line_count - 1)  # subtract header
+            else:
+                manifest["metadata"]["scheme_count"] = 0
+        else:
+            manifest["metadata"]["scheme_count"] = 0
+
+        # Write manifest
+        manifest_path = PROJECT_ROOT / "data_manifest.json"
+        try:
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                json.dump(manifest, f, indent=2, ensure_ascii=False)
+            self._console.append_system(f"Manifest written → {manifest_path}", C_GREEN)
+        except Exception as e:
+            self._console.append_system(f"Failed to write manifest: {e}", C_RED)
 
     def _print_summary(self, results: list[StageResult], status: PipelineStatus) -> None:
         passed = sum(1 for r in results if r.status == StageStatus.PASSED)
@@ -1223,12 +1182,10 @@ class MainWindow(QMainWindow):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def main() -> None:
-    """Initialise and launch the AMC Dashboard Pipeline application."""
     app = QApplication(sys.argv)
     app.setApplicationName(WINDOW_TITLE)
     app.setOrganizationName("AMC Analytics")
 
-    # Force dark palette application-wide
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window,          QColor(C_BG))
     palette.setColor(QPalette.ColorRole.WindowText,      QColor(C_TEXT_PRIMARY))
