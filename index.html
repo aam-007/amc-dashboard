@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AM-CONSOLE — Asset Management Intelligence Console</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #C0C0C0;
+  --borderLight: #FFFFFF;
+  --borderDark: #808080;
+  --shadowDark: #404040;
+  --shadowLight: #dfdfdf;
+  --windowBorder: #000000;
+  --titleBar: #000080;
+  --titleBarEnd: #1084D0;
+  --menuHover: #000080;
+  --term-bg: #000000;
+  --term-amber: #FFB000;
+  --term-amber-dim: #CC8800;
+  --term-green: #00CC44;
+  --term-red: #FF3333;
+  --term-white: #DDDDDD;
+  --term-cyan: #00CCCC;
+  --term-blue: #4488FF;
+  --term-grey: #888888;
+  --term-yellow: #FFFF00;
+  --status-ok: #00CC44;
+  --status-fail: #FF3333;
+  --status-warn: #FFB000;
+  --font-ui: "MS Sans Serif", "Segoe UI", Tahoma, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; border-radius:0!important; }
+body {
+  background: var(--bg);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-image: radial-gradient(circle, #aaa 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+/* TITLE BAR */
+.win-titlebar {
+  background: linear-gradient(to right, var(--titleBar), var(--titleBarEnd));
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  padding: 3px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  flex-shrink: 0;
+}
+.title-left { display:flex; align-items:center; gap:5px; }
+.title-icon {
+  width:16px; height:16px;
+  background: #000;
+  border: 1px solid #fff;
+  color: var(--term-amber);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  display:flex; align-items:center; justify-content:center;
+  font-weight: bold;
+}
+.win-buttons { display:flex; gap:3px; }
+.win-btn {
+  width:16px; height:14px;
+  background: var(--bg);
+  border: 2px solid;
+  border-color: var(--borderLight) var(--shadowDark) var(--shadowDark) var(--borderLight);
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:bold; cursor:pointer;
+}
+.win-btn:active { border-color: var(--shadowDark) var(--borderLight) var(--borderLight) var(--shadowDark); transform:translate(1px,1px); }
+
+/* MENU BAR */
+.menu-bar {
+  background: var(--bg);
+  border-bottom: 2px solid var(--shadowDark);
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  height: 22px;
+  position: relative;
+  z-index: 100;
+}
+.menu-item {
+  padding: 3px 10px;
+  cursor: pointer;
+  position: relative;
+  font-size: 12px;
+  display: flex; align-items: center;
+}
+.menu-item:hover { background: var(--menuHover); color: #fff; }
+.menu-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%; left: 0;
+  background: var(--bg);
+  border: 2px solid;
+  border-color: var(--borderLight) var(--shadowDark) var(--shadowDark) var(--borderLight);
+  box-shadow: 2px 2px 0 var(--shadowDark);
+  z-index: 200;
+  min-width: 180px;
+}
+.menu-item:hover .menu-dropdown { display: block; }
+.menu-dropdown a {
+  display: block;
+  padding: 3px 16px;
+  font-size: 12px;
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+.menu-dropdown a:hover { background: var(--menuHover); color: #fff; }
+.menu-dropdown .sep { border:none; border-top:1px solid var(--shadowDark); margin:2px 0; }
+
+/* FKEY BAR */
+.fkey-bar {
+  display: flex;
+  gap: 3px;
+  padding: 3px 6px;
+  background: #b0b0b0;
+  border-bottom: 2px solid var(--shadowDark);
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.fkey {
+  background: #d4d0c8;
+  border: 2px solid;
+  border-color: var(--borderLight) var(--shadowDark) var(--shadowDark) var(--borderLight);
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--shadowDark);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+.fkey:hover { background: #e4e0d8; }
+.fkey.active, .fkey:active {
+  border-color: var(--shadowDark) var(--borderLight) var(--borderLight) var(--shadowDark);
+  background: #c0bcb4;
+}
+
+/* TOP STRIP */
+.top-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--term-bg);
+  border-bottom: 1px solid #333;
+  padding: 2px 8px;
+  flex-shrink: 0;
+}
+.enterprise-clock {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--term-amber);
+  display: flex; gap: 16px;
+}
+.clock-block { display:flex; flex-direction:column; line-height:1.3; }
+.clock-label { font-size:9px; color:var(--term-grey); text-transform:uppercase; }
+.clock-value { font-size:12px; font-weight:bold; }
+.data-updated {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--term-green);
+  display: flex; align-items: center; gap: 6px;
+}
+.upd-led { width:7px; height:7px; background:var(--term-green); box-shadow: 0 0 5px var(--term-green); }
+
+/* TICKER */
+.ticker-bar {
+  background: #0a0a0a;
+  border-bottom: 1px solid #333;
+  height: 20px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.ticker-label {
+  background: var(--titleBar);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: bold;
+  padding: 0 8px;
+  height: 100%;
+  display: flex; align-items: center;
+  border-right: 1px solid #444;
+  flex-shrink: 0;
+  letter-spacing: 1px;
+}
+.ticker-track-wrap { flex:1; overflow:hidden; height:100%; display:flex; align-items:center; }
+.ticker-track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: ticker-scroll 60s linear infinite;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding-left: 100%;
+}
+@keyframes ticker-scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-100%)} }
+.tick-item { margin-right: 40px; }
+.tick-sep { color:#444; margin-right:40px; }
+
+/* MAIN WORKSPACE */
+.workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+/* TAB BAR */
+.tab-bar {
+  background: var(--bg);
+  border-bottom: 2px solid var(--shadowDark);
+  display: flex;
+  align-items: flex-end;
+  flex-shrink: 0;
+  padding: 2px 4px 0;
+  gap: 2px;
+}
+.tab-btn {
+  padding: 3px 14px;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  border: 2px solid;
+  border-bottom: none;
+  border-color: var(--borderLight) var(--shadowDark) transparent var(--borderLight);
+  background: #a0a0a0;
+  color: #333;
+  position: relative;
+  bottom: -1px;
+  user-select: none;
+}
+.tab-btn.active {
+  background: var(--bg);
+  color: #000;
+  font-weight: bold;
+  z-index: 2;
+  padding-top: 4px;
+}
+.tab-btn:hover:not(.active) { background: #c0c0c0; }
+
+/* PANEL AREA */
+.panel-area {
+  flex: 1;
+  overflow: hidden;
+  background: #555;
+  padding: 2px;
+  min-height: 0;
+}
+.panel-content {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+.panel-content.active { display: flex; gap: 2px; }
+
+/* GENERIC TERMINAL PANEL */
+.term-panel {
+  background: var(--term-bg);
+  border: 2px solid;
+  border-color: var(--shadowDark) var(--borderLight) var(--borderLight) var(--shadowDark);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+  resize: horizontal;
+}
+.panel-titlebar {
+  background: #111;
+  border-bottom: 1px solid #333;
+  padding: 2px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.panel-title {
+  color: var(--term-amber);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.panel-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--term-grey);
+  background: #1a1a1a;
+  padding: 0 4px;
+  border: 1px solid #333;
+}
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px;
+}
+.panel-body::-webkit-scrollbar { width:7px; background:#111; }
+.panel-body::-webkit-scrollbar-thumb { background:#444; }
+
+/* VIEW TOGGLE */
+.view-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 8px;
+}
+.view-btn {
+  padding: 2px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+  background: #0a0a0a;
+  color: var(--term-grey);
+  border: 1px solid #333;
+}
+.view-btn.active { background: #1a1a1a; color: var(--term-amber); border-color: var(--term-amber); }
+.view-btn:hover:not(.active) { color: var(--term-white); }
+
+/* KPI CARDS */
+.kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:8px; }
+.kpi-card {
+  border: 1px solid #333;
+  background: #0a0a0a;
+  padding: 5px 7px;
+}
+.kpi-label { font-family:var(--font-mono); font-size:9px; color:var(--term-grey); text-transform:uppercase; letter-spacing:1px; margin-bottom:2px; }
+.kpi-value { font-family:var(--font-mono); font-size:15px; font-weight:bold; color:var(--term-amber); line-height:1.1; }
+.kpi-sub { font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-top:1px; }
+.kpi-delta-pos { color:var(--term-green); }
+.kpi-delta-neg { color:var(--term-red); }
+.kpi-card-wide { grid-column: 1 / -1; }
+
+/* TABLES */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.data-table th {
+  color: var(--term-amber);
+  text-align: left;
+  padding: 3px 6px;
+  border-bottom: 1px solid #333;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  position: sticky;
+  top: 0;
+  background: #111;
+  z-index: 1;
+}
+.data-table td {
+  padding: 2px 6px;
+  border-bottom: 1px solid #111;
+  color: var(--term-white);
+}
+.data-table tr:hover td { background: #0a1520; }
+.td-rank { color:var(--term-grey); width:28px; text-align:center; }
+.td-name { color:var(--term-amber); }
+.td-num  { text-align:right; color:var(--term-cyan); }
+.td-pct  { text-align:right; }
+.td-bar-wrap { display:inline-flex; align-items:center; gap:4px; }
+.td-bar { height:4px; background:var(--term-blue); display:inline-block; }
+
+/* SEARCH BAR */
+.search-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.search-input {
+  flex: 1;
+  background: #0a0a0a;
+  border: 1px solid #444;
+  color: var(--term-amber);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 6px;
+  outline: none;
+}
+.search-input:focus { border-color: var(--term-amber); }
+.search-input::placeholder { color: #555; }
+.search-btn {
+  background: #111;
+  border: 1px solid #444;
+  color: var(--term-grey);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+.search-btn:hover { color: var(--term-amber); border-color: var(--term-amber); }
+
+/* CHART CONTAINER */
+.chart-wrap {
+  width: 100%;
+  height: 320px;
+  position: relative;
+}
+.chart-wrap-tall { height: 420px; }
+.chart-wrap-full { height: 100%; min-height: 300px; }
+
+/* SCENARIO SELECTOR */
+.scenario-sel {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.scenario-btn {
+  padding: 2px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+  border: 1px solid #444;
+  background: #0a0a0a;
+  color: var(--term-grey);
+}
+.scenario-btn.active-base { background: #001a33; color: var(--term-cyan); border-color: var(--term-cyan); }
+.scenario-btn.active-bull { background: #001a00; color: var(--term-green); border-color: var(--term-green); }
+.scenario-btn.active-bear { background: #1a0000; color: var(--term-red); border-color: var(--term-red); }
+
+/* PANEL SEP */
+.panel-sep { border:none; border-top:1px solid #222; margin:6px 0; }
+.panel-section-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--term-blue);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+/* DATA ROW */
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 4px;
+  border-bottom: 1px solid #111;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.data-row-key { color:var(--term-grey); }
+.data-row-val { color:var(--term-cyan); font-weight:bold; }
+.data-row-val.green { color:var(--term-green); }
+.data-row-val.amber { color:var(--term-amber); }
+
+/* DOWNLOAD BTN */
+.dl-btn {
+  background: #0a0a0a;
+  border: 1px solid #333;
+  color: var(--term-grey);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+.dl-btn:hover { color:var(--term-amber); border-color:var(--term-amber); }
+
+/* STATUS BAR */
+.status-bar {
+  background: var(--bg);
+  border-top: 2px solid;
+  border-color: var(--shadowDark) var(--borderLight) var(--borderLight) var(--shadowDark);
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  height: 20px;
+  font-size: 10px;
+}
+.status-seg {
+  padding: 2px 10px;
+  border-right: 1px solid var(--shadowDark);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+.status-seg:last-child { border-right:none; margin-left:auto; }
+.sled { width:7px; height:7px; border:1px solid #888; flex-shrink:0; }
+.sled-ok { background:var(--status-ok); }
+.sled-warn { background:var(--status-warn); animation:led-pulse 1s ease-in-out infinite; }
+@keyframes led-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.s-ok { color:#006600; font-weight:bold; }
+
+/* MISC */
+.text-amber { color:var(--term-amber); }
+.text-green { color:var(--term-green); }
+.text-red   { color:var(--term-red); }
+.text-cyan  { color:var(--term-cyan); }
+.text-grey  { color:var(--term-grey); }
+.text-white { color:var(--term-white); }
+.mono { font-family:var(--font-mono); }
+a { text-decoration:none; color:inherit; }
+::-webkit-scrollbar { width:7px; height:7px; background:#1a1a1a; }
+::-webkit-scrollbar-thumb { background:#444; }
+
+/* LAYOUT HELPERS */
+.flex-col { display:flex; flex-direction:column; }
+.flex1 { flex:1; min-height:0; min-width:0; }
+.overflow-auto { overflow:auto; }
+.gap2 { gap:2px; }
+.p6 { padding:6px; }
+.mb6 { margin-bottom:6px; }
+.mb4 { margin-bottom:4px; }
+
+/* OVERVIEW GRID */
+.overview-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 200px;
+  gap: 2px;
+  height: 100%;
+}
+/* RANKINGS LAYOUT */
+.rankings-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2px;
+  height: 100%;
+}
+/* MARKET SHARE LAYOUT */
+.mktshare-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  height: 100%;
+}
+/* REVENUE LAYOUT */
+.revenue-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 2px;
+  height: 100%;
+}
+/* FORECAST LAYOUT */
+.forecast-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  height: 100%;
+}
+/* EXPLORER LAYOUT */
+.explorer-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2px;
+  height: 100%;
+}
+
+/* Resizable panels */
+.resizable-h { resize: horizontal; overflow: auto; }
+
+/* Heatmap legend */
+.hm-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--term-grey);
+  margin-bottom: 4px;
+}
+.hm-grad {
+  width: 80px; height: 8px;
+  background: linear-gradient(to right, #001a33, #004080, #0066cc, #FFB000);
+}
+
+/* NAV search results */
+.nav-result-row {
+  padding: 3px 4px;
+  border-bottom: 1px solid #111;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+}
+.nav-result-row:hover { background: #0a1520; }
+.nav-name { color:var(--term-white); }
+.nav-date { color:var(--term-grey); }
+.nav-val  { color:var(--term-cyan); font-weight:bold; text-align:right; }
+
+/* TER breakdown */
+.ter-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 6px;
+  align-items: center;
+  padding: 2px 4px;
+  border-bottom: 1px solid #111;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.ter-name { color:var(--term-white); }
+.ter-reg  { color:var(--term-amber); text-align:right; }
+.ter-dir  { color:var(--term-green); text-align:right; }
+
+</style>
+</head>
+<body>
+
+<!-- TITLE BAR -->
+<div class="win-titlebar">
+  <div class="title-left">
+    <div class="title-icon">A</div>
+    <span style="font-size:12px; font-weight:bold; letter-spacing:0.5px;">AM-CONSOLE Professional — AMC Analytics Terminal</span>
+    <span style="font-size:10px; opacity:0.8; margin-left:10px;">Asset Management Intelligence Console | India | Jan–Mar 2026</span>
+  </div>
+  <div class="win-buttons">
+    <div class="win-btn">_</div>
+    <div class="win-btn">□</div>
+    <div class="win-btn" onclick="if(confirm('Exit AM-CONSOLE?')) document.body.innerHTML='';">✕</div>
+  </div>
+</div>
+
+<!-- MENU BAR -->
+<div class="menu-bar">
+  <div class="menu-item">File
+    <div class="menu-dropdown">
+      <a onclick="switchTab('overview')">Dashboard</a>
+      <a onclick="downloadCSV('rankings')">Export Rankings CSV</a>
+      <a onclick="downloadCSV('revenue')">Export Revenue CSV</a>
+      <a onclick="downloadCSV('market_share')">Export Market Share CSV</a>
+      <hr class="sep">
+      <a onclick="if(confirm('Exit?')) document.body.innerHTML='';">Exit</a>
+    </div>
+  </div>
+  <div class="menu-item">Analytics
+    <div class="menu-dropdown">
+      <a onclick="switchTab('rankings')">AMC Rankings</a>
+      <a onclick="switchTab('market_share')">Market Share</a>
+      <a onclick="switchTab('revenue')">Revenue Estimates</a>
+      <a onclick="switchTab('forecast')">Forecast Models</a>
+    </div>
+  </div>
+  <div class="menu-item">Data
+    <div class="menu-dropdown">
+      <a onclick="switchTab('overview')">Overview</a>
+      <a onclick="switchTab('explorer')">Data Explorer</a>
+    </div>
+  </div>
+  <div class="menu-item">Help
+    <div class="menu-dropdown">
+      <a onclick="alert('AM-CONSOLE v1.0\nData: AMFI India\nPeriod: Jan–Mar 2026\n51 AMCs | 14,212 Schemes')">About</a>
+    </div>
+  </div>
+</div>
+
+<!-- FKEY BAR -->
+<div class="fkey-bar">
+  <span class="fkey" id="fk-overview"  onclick="switchTab('overview')"    >F1 Overview</span>
+  <span class="fkey" id="fk-rankings"  onclick="switchTab('rankings')"    >F2 Rankings</span>
+  <span class="fkey" id="fk-market_share" onclick="switchTab('market_share')">F3 Mkt Share</span>
+  <span class="fkey" id="fk-revenue"   onclick="switchTab('revenue')"     >F4 Revenue</span>
+  <span class="fkey" id="fk-forecast"  onclick="switchTab('forecast')"    >F5 Forecast</span>
+  <span class="fkey" id="fk-explorer"  onclick="switchTab('explorer')"    >F6 Explorer</span>
+  <span class="fkey" onclick="downloadCSV('rankings')" >F7 Export</span>
+  <span class="fkey" onclick="toggleFullscreen()"      >F11 Full</span>
+</div>
+
+<!-- TOP STRIP -->
+<div class="top-strip">
+  <div class="enterprise-clock">
+    <div class="clock-block">
+      <span class="clock-label">IST Time</span>
+      <span class="clock-value" id="clockTime">--:--:--</span>
+    </div>
+    <div class="clock-block">
+      <span class="clock-label">Date</span>
+      <span class="clock-value" id="clockDate">--- -- ----</span>
+    </div>
+    <div class="clock-block">
+      <span class="clock-label">Day</span>
+      <span class="clock-value" id="clockDay">---</span>
+    </div>
+    <div class="clock-block">
+      <span class="clock-label">Period</span>
+      <span class="clock-value" style="font-size:11px;">Jan–Mar 2026</span>
+    </div>
+  </div>
+  <div class="data-updated">
+    <div class="upd-led"></div>
+    <span>Last Pipeline Run: <strong id="lastRunDisplay">15 Jun 2026 18:19:54 IST</strong></span>
+    <span style="color:var(--term-grey);">|</span>
+    <span>51 AMCs &nbsp;|&nbsp; 14,212 Schemes</span>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-label">AMFI LIVE</div>
+  <div class="ticker-track-wrap">
+    <div class="ticker-track" id="tickerTrack">
+      <span class="tick-item text-amber">INDUSTRY AUM: ₹81.54 LAKH CR &nbsp;(Jan–Mar 2026)</span>
+      <span class="tick-sep">◆</span>
+      <span class="tick-item text-green">LARGEST: SBI MF — ₹12,48,003 CR &nbsp;|&nbsp; 15.31% SHARE</span>
+      <span class="tick-sep">◆</span>
+      <span class="tick-item text-cyan">#2 ICICI PRUDENTIAL — ₹11,03,751 CR &nbsp;|&nbsp; 13.54%</span>
+      <span class="tick-sep">◆</span>
+      <span class="tick-item text-amber">#3 HDFC — ₹9,27,451 CR &nbsp;|&nbsp; 11.37%</span>
+      <span class="tick-sep">◆</span>
+      <span class="tick-item text-white">EST. INDUSTRY REVENUE: ₹61,155 CR</span>
+      <span class="tick-sep">◆</span>
+      <span class="tick-item text-green">FORECAST AUM BASE CASE FY27: ₹91.32 LAKH CR</span>
+      <span class="tick-sep">◆</span>
+      <span class="tick-item text-amber">TOP 5 AMCs CONTROL: 56.03% OF INDUSTRY AUM</span>
+      <span class="tick-sep">◆</span>
+      <span class="tick-item text-cyan">DATA SOURCE: AMFI INDIA &nbsp;|&nbsp; PIPELINE: 15 JUN 2026 18:19:54 IST</span>
+      <span class="tick-sep">◆</span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB BAR + WORKSPACE -->
+<div class="workspace">
+  <div class="tab-bar">
+    <div class="tab-btn active" id="tab-overview"    onclick="switchTab('overview')">Overview</div>
+    <div class="tab-btn" id="tab-rankings"           onclick="switchTab('rankings')">AMC Rankings</div>
+    <div class="tab-btn" id="tab-market_share"       onclick="switchTab('market_share')">Market Share</div>
+    <div class="tab-btn" id="tab-revenue"            onclick="switchTab('revenue')">Revenue</div>
+    <div class="tab-btn" id="tab-forecast"           onclick="switchTab('forecast')">Forecast</div>
+    <div class="tab-btn" id="tab-explorer"           onclick="switchTab('explorer')">Data Explorer</div>
+  </div>
+
+  <div class="panel-area">
+
+    <!-- ═══════════════════════════════════════════
+         TAB 1: OVERVIEW
+         ═══════════════════════════════════════════ -->
+    <div class="panel-content active" id="panel-overview">
+      <div class="overview-layout" style="width:100%; height:100%;">
+
+        <!-- LEFT: KPIs -->
+        <div class="term-panel">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ System Overview</span>
+            <span class="panel-tag">KPI</span>
+          </div>
+          <div class="panel-body">
+            <div class="kpi-grid">
+              <div class="kpi-card kpi-card-wide">
+                <div class="kpi-label">Total Industry AUM</div>
+                <div class="kpi-value">₹81.54 L Cr</div>
+                <div class="kpi-sub">Jan–Mar 2026 Average &nbsp;<span class="kpi-delta-pos">▲ Base</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Registered AMCs</div>
+                <div class="kpi-value">51</div>
+                <div class="kpi-sub">AMFI registered</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Active Schemes</div>
+                <div class="kpi-value">14,212</div>
+                <div class="kpi-sub">incl. all categories</div>
+              </div>
+              <div class="kpi-card kpi-card-wide">
+                <div class="kpi-label">Est. Industry Revenue</div>
+                <div class="kpi-value">₹61,155 Cr</div>
+                <div class="kpi-sub">At 0.75% blended yield on AUM</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Largest AMC</div>
+                <div class="kpi-value" style="font-size:13px;">SBI MF</div>
+                <div class="kpi-sub">₹12,48,003 Cr &nbsp;<span class="kpi-delta-pos">15.31%</span></div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Top 5 Concentration</div>
+                <div class="kpi-value">56.0%</div>
+                <div class="kpi-sub">Top 5 AMCs share</div>
+              </div>
+            </div>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ Forecast Summary</div>
+            <div class="data-row"><span class="data-row-key">Base Case FY+1</span><span class="data-row-val amber">₹91.32 L Cr</span></div>
+            <div class="data-row"><span class="data-row-key">Base Case FY+2</span><span class="data-row-val amber">₹102.28 L Cr</span></div>
+            <div class="data-row"><span class="data-row-key">Base Case FY+3</span><span class="data-row-val amber">₹114.56 L Cr</span></div>
+            <div class="data-row"><span class="data-row-key">Bull Case FY+3</span><span class="data-row-val green">₹133.97 L Cr</span></div>
+            <div class="data-row"><span class="data-row-key">Bear Case FY+3</span><span class="data-row-val" style="color:var(--term-red);">₹97.12 L Cr</span></div>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ Data Updated</div>
+            <div class="data-row"><span class="data-row-key">Pipeline Run</span><span class="data-row-val green">15 Jun 2026</span></div>
+            <div class="data-row"><span class="data-row-key">AUM Period</span><span class="data-row-val amber">Jan–Mar 2026</span></div>
+            <div class="data-row"><span class="data-row-key">TER Period</span><span class="data-row-val amber">Jun 2026</span></div>
+            <div class="data-row"><span class="data-row-key">NAV Date</span><span class="data-row-val amber">12 Jun 2026</span></div>
+          </div>
+        </div>
+
+        <!-- CENTRE: Charts -->
+        <div class="term-panel flex1">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Industry Snapshot</span>
+            <span class="panel-tag">AMFI Jan–Mar 2026</span>
+          </div>
+          <div class="panel-body" id="overview-charts-body" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-blue); text-transform:uppercase; letter-spacing:1px;">▸ AUM Distribution — Top 15 AMCs</div>
+            <div class="chart-wrap" id="chart-overview-bar"></div>
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-blue); text-transform:uppercase; letter-spacing:1px;">▸ Market Share — Top 10 vs Rest</div>
+            <div class="chart-wrap" id="chart-overview-pie"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Top 10 quick table -->
+        <div class="term-panel" style="width:200px;">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Top 10 AMCs</span>
+            <span class="panel-tag">AUM</span>
+          </div>
+          <div class="panel-body" style="padding:0;">
+            <table class="data-table" id="overview-top10">
+              <thead><tr>
+                <th style="width:22px;">#</th>
+                <th>AMC</th>
+                <th style="text-align:right;">Share%</th>
+              </tr></thead>
+              <tbody id="overview-top10-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /panel-overview -->
+
+    <!-- ═══════════════════════════════════════════
+         TAB 2: AMC RANKINGS
+         ═══════════════════════════════════════════ -->
+    <div class="panel-content" id="panel-rankings">
+      <div class="rankings-layout" style="width:100%; height:100%;">
+
+        <!-- LEFT: Full Table -->
+        <div class="term-panel">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ AMC Rankings — All 51</span>
+            <span class="panel-tag">Jan–Mar 2026</span>
+          </div>
+          <div class="panel-body" style="padding:4px 6px;">
+            <div style="display:flex; align-items:center; gap:4px; margin-bottom:6px;">
+              <div class="view-toggle">
+                <span class="view-btn active" id="rank-view-table" onclick="rankSetView('table')">TABLE</span>
+                <span class="view-btn" id="rank-view-chart" onclick="rankSetView('chart')">CHART</span>
+              </div>
+              <div class="search-bar" style="flex:1; margin-bottom:0;">
+                <input type="text" class="search-input" id="rankSearch" placeholder="Search AMC..." oninput="filterRankings()">
+              </div>
+              <button class="dl-btn" onclick="downloadCSV('rankings')">↓ CSV</button>
+            </div>
+            <div id="rank-table-view" style="height:calc(100% - 38px); overflow-y:auto;">
+              <table class="data-table" id="rankingsTable">
+                <thead><tr>
+                  <th style="width:28px;">#</th>
+                  <th>AMC Name</th>
+                  <th style="text-align:right;">Avg AUM (₹ Cr)</th>
+                  <th style="text-align:right;">Market Share</th>
+                </tr></thead>
+                <tbody id="rankingsTableBody"></tbody>
+              </table>
+            </div>
+            <div id="rank-chart-view" style="display:none; height:calc(100% - 38px);">
+              <div class="chart-wrap chart-wrap-full" id="chart-rankings-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Stats + historical files -->
+        <div class="term-panel" style="width:340px; flex-shrink:0;">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Concentration Analysis</span>
+            <span class="panel-tag">STATS</span>
+          </div>
+          <div class="panel-body">
+            <div class="panel-section-title">▸ AUM Concentration</div>
+            <div class="data-row"><span class="data-row-key">Top 3 AMCs</span><span class="data-row-val amber">40.22%</span></div>
+            <div class="data-row"><span class="data-row-key">Top 5 AMCs</span><span class="data-row-val amber">56.03%</span></div>
+            <div class="data-row"><span class="data-row-key">Top 10 AMCs</span><span class="data-row-val amber">78.45%</span></div>
+            <div class="data-row"><span class="data-row-key">Remaining 41</span><span class="data-row-val" style="color:var(--term-grey);">21.55%</span></div>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ AUM Distribution</div>
+            <div class="chart-wrap" style="height:180px;" id="chart-conc-donut"></div>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ Historical Files</div>
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">data/exports/rankings/</div>
+            <div id="hist-rankings-list" style="max-height:160px; overflow-y:auto;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /panel-rankings -->
+
+    <!-- ═══════════════════════════════════════════
+         TAB 3: MARKET SHARE
+         ═══════════════════════════════════════════ -->
+    <div class="panel-content" id="panel-market_share">
+      <div class="mktshare-layout" style="width:100%; height:100%;">
+
+        <!-- LEFT: Treemap + bar -->
+        <div class="term-panel">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Market Share — Visualisation</span>
+            <span class="panel-tag">AMFI Jan–Mar 2026</span>
+          </div>
+          <div class="panel-body" style="display:flex; flex-direction:column; gap:8px;">
+            <div class="view-toggle">
+              <span class="view-btn active" id="ms-view-treemap" onclick="msSetView('treemap')">TREEMAP</span>
+              <span class="view-btn" id="ms-view-bar"     onclick="msSetView('bar')">BAR</span>
+              <span class="view-btn" id="ms-view-pie"     onclick="msSetView('pie')">PIE</span>
+            </div>
+            <div id="ms-treemap-view" class="chart-wrap chart-wrap-full" style="height:calc(100% - 30px);" id="chart-ms-treemap"></div>
+            <div id="ms-bar-view"     class="chart-wrap chart-wrap-full" style="display:none; height:calc(100% - 30px);" id="chart-ms-bar"></div>
+            <div id="ms-pie-view"     class="chart-wrap chart-wrap-full" style="display:none; height:calc(100% - 30px);" id="chart-ms-pie"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Table -->
+        <div class="term-panel">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Market Share — Table</span>
+            <span class="panel-tag">ALL 51 AMCs</span>
+          </div>
+          <div class="panel-body" style="padding:4px 6px;">
+            <div style="display:flex; align-items:center; gap:4px; margin-bottom:6px;">
+              <input type="text" class="search-input" id="msSearch" placeholder="Search AMC..." oninput="filterMarketShare()" style="flex:1;">
+              <button class="dl-btn" onclick="downloadCSV('market_share')">↓ CSV</button>
+            </div>
+            <div style="height:calc(100% - 38px); overflow-y:auto;">
+              <table class="data-table">
+                <thead><tr>
+                  <th>#</th>
+                  <th>AMC</th>
+                  <th style="text-align:right;">AUM (₹ Cr)</th>
+                  <th style="text-align:right;">Share%</th>
+                  <th style="text-align:right; width:80px;">Bar</th>
+                </tr></thead>
+                <tbody id="msTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /panel-market_share -->
+
+    <!-- ═══════════════════════════════════════════
+         TAB 4: REVENUE
+         ═══════════════════════════════════════════ -->
+    <div class="panel-content" id="panel-revenue">
+      <div class="revenue-layout" style="width:100%; height:100%;">
+
+        <!-- LEFT: Charts + table -->
+        <div class="term-panel">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Revenue Estimates</span>
+            <span class="panel-tag">0.75% BLENDED YIELD</span>
+          </div>
+          <div class="panel-body" style="display:flex; flex-direction:column; gap:6px;">
+            <div class="view-toggle">
+              <span class="view-btn active" id="rev-view-chart" onclick="revSetView('chart')">CHART</span>
+              <span class="view-btn" id="rev-view-table" onclick="revSetView('table')">TABLE</span>
+            </div>
+            <div id="rev-chart-view" style="flex:1; min-height:0; display:flex; flex-direction:column; gap:8px;">
+              <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-blue); text-transform:uppercase; letter-spacing:1px;">▸ Revenue Waterfall — Top 20 AMCs</div>
+              <div class="chart-wrap" style="height:300px;" id="chart-rev-waterfall"></div>
+              <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-blue); text-transform:uppercase; letter-spacing:1px;">▸ AUM vs Revenue (Top 15)</div>
+              <div class="chart-wrap" style="height:250px;" id="chart-rev-scatter"></div>
+            </div>
+            <div id="rev-table-view" style="display:none; flex:1; overflow-y:auto;">
+              <table class="data-table">
+                <thead><tr>
+                  <th>#</th><th>AMC</th>
+                  <th style="text-align:right;">AUM (₹ Cr)</th>
+                  <th style="text-align:right;">Yield%</th>
+                  <th style="text-align:right;">Rev (₹ Cr)</th>
+                </tr></thead>
+                <tbody id="revTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Summary stats -->
+        <div class="term-panel" style="width:300px; flex-shrink:0;">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Revenue Summary</span>
+            <span class="panel-tag">STATS</span>
+          </div>
+          <div class="panel-body">
+            <div class="kpi-card">
+              <div class="kpi-label">Total Industry Revenue</div>
+              <div class="kpi-value">₹61,155 Cr</div>
+              <div class="kpi-sub">At 0.75% blended yield</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Top AMC Revenue (SBI)</div>
+              <div class="kpi-value">₹9,360 Cr</div>
+              <div class="kpi-sub">15.31% of industry</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Median AMC Revenue</div>
+              <div class="kpi-value">₹247 Cr</div>
+              <div class="kpi-sub">AMC #25 (WhiteOak)</div>
+            </div>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ Revenue Tiers</div>
+            <div class="data-row"><span class="data-row-key">&gt; ₹5,000 Cr</span><span class="data-row-val amber">4 AMCs</span></div>
+            <div class="data-row"><span class="data-row-key">₹1,000–5,000 Cr</span><span class="data-row-val amber">8 AMCs</span></div>
+            <div class="data-row"><span class="data-row-key">₹100–1,000 Cr</span><span class="data-row-val amber">16 AMCs</span></div>
+            <div class="data-row"><span class="data-row-key">&lt; ₹100 Cr</span><span class="data-row-val" style="color:var(--term-grey);">23 AMCs</span></div>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ Revenue Share — Top 5</div>
+            <div class="chart-wrap" style="height:200px;" id="chart-rev-pie"></div>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ Historical Files</div>
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">data/exports/revenue/</div>
+            <div id="hist-revenue-list"></div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /panel-revenue -->
+
+    <!-- ═══════════════════════════════════════════
+         TAB 5: FORECAST
+         ═══════════════════════════════════════════ -->
+    <div class="panel-content" id="panel-forecast">
+      <div class="forecast-layout" style="width:100%; height:100%;">
+
+        <!-- LEFT: Industry forecast -->
+        <div class="term-panel">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Industry AUM Forecast</span>
+            <span class="panel-tag">3-YEAR PROJECTION</span>
+          </div>
+          <div class="panel-body" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-blue); text-transform:uppercase; letter-spacing:1px;">▸ Industry AUM — Bull / Base / Bear</div>
+            <div class="chart-wrap" style="height:260px;" id="chart-fc-industry-aum"></div>
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-blue); text-transform:uppercase; letter-spacing:1px;">▸ Industry Revenue Forecast</div>
+            <div class="chart-wrap" style="height:220px;" id="chart-fc-industry-rev"></div>
+            <div class="panel-section-title">▸ Scenario Summary</div>
+            <table class="data-table">
+              <thead><tr>
+                <th>Scenario</th>
+                <th style="text-align:right;">Current</th>
+                <th style="text-align:right;">FY+1</th>
+                <th style="text-align:right;">FY+2</th>
+                <th style="text-align:right;">FY+3</th>
+              </tr></thead>
+              <tbody>
+                <tr><td class="text-cyan">Base Case</td><td class="td-num">₹81.54</td><td class="td-num">₹91.32</td><td class="td-num">₹102.28</td><td class="td-num">₹114.56</td></tr>
+                <tr><td class="text-green">Bull Case</td><td class="td-num">₹81.54</td><td class="td-num">₹96.22</td><td class="td-num">₹113.54</td><td class="td-num">₹133.97</td></tr>
+                <tr><td class="text-red">Bear Case</td><td class="td-num">₹81.54</td><td class="td-num">₹86.43</td><td class="td-num">₹91.62</td><td class="td-num">₹97.12</td></tr>
+              </tbody>
+            </table>
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey);">Values in Lakh Crore. Source: forecast_aum_latest.csv</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Per-AMC forecast -->
+        <div class="term-panel">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Per-AMC Forecast</span>
+            <span class="panel-tag">SELECT AMC</span>
+          </div>
+          <div class="panel-body" style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; gap:4px; align-items:center;">
+              <span style="font-family:var(--font-mono); font-size:10px; color:var(--term-grey);">AMC:</span>
+              <select id="fcAmcSelect" onchange="renderAmcForecast()" style="flex:1; background:#0a0a0a; border:1px solid #444; color:var(--term-amber); font-family:var(--font-mono); font-size:11px; padding:2px 4px; outline:none;"></select>
+            </div>
+            <div class="chart-wrap" style="height:260px;" id="chart-fc-amc-aum"></div>
+            <div class="panel-section-title" style="margin-top:4px;">▸ Scenario Detail</div>
+            <table class="data-table" id="fc-amc-detail-table">
+              <thead><tr>
+                <th>Scenario</th>
+                <th style="text-align:right;">Current (₹ Cr)</th>
+                <th style="text-align:right;">FY+1</th>
+                <th style="text-align:right;">FY+2</th>
+                <th style="text-align:right;">FY+3</th>
+              </tr></thead>
+              <tbody id="fc-amc-detail-body"></tbody>
+            </table>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ Revenue Forecast (₹ Cr)</div>
+            <div class="chart-wrap" style="height:180px;" id="chart-fc-amc-rev"></div>
+            <hr class="panel-sep">
+            <div class="panel-section-title">▸ Historical Forecast Files</div>
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">data/exports/forecasting/</div>
+            <div id="hist-forecast-list"></div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /panel-forecast -->
+
+    <!-- ═══════════════════════════════════════════
+         TAB 6: DATA EXPLORER
+         ═══════════════════════════════════════════ -->
+    <div class="panel-content" id="panel-explorer">
+      <div class="explorer-layout" style="width:100%; height:100%;">
+
+        <!-- LEFT: Data set selector -->
+        <div class="term-panel" style="width:200px; flex-shrink:0;">
+          <div class="panel-titlebar">
+            <span class="panel-title">▌ Datasets</span>
+          </div>
+          <div class="panel-body" style="padding:4px;">
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:6px;">SELECT DATASET TO EXPLORE</div>
+            <div class="explorer-ds-btn active" id="exp-btn-nav"    onclick="expSetDs('nav')">NAV Snapshot</div>
+            <div class="explorer-ds-btn" id="exp-btn-ter"           onclick="expSetDs('ter')">Expense Ratios (TER)</div>
+            <div class="explorer-ds-btn" id="exp-btn-aum"           onclick="expSetDs('aum')">AUM (Processed)</div>
+            <hr class="panel-sep">
+            <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">HISTORICAL FILES</div>
+            <div class="explorer-ds-btn" id="exp-btn-hist-rankings" onclick="expSetDs('hist-rankings')">Rankings History</div>
+            <div class="explorer-ds-btn" id="exp-btn-hist-mshare"   onclick="expSetDs('hist-mshare')">Mkt Share History</div>
+            <div class="explorer-ds-btn" id="exp-btn-hist-rev"      onclick="expSetDs('hist-rev')">Revenue History</div>
+            <div class="explorer-ds-btn" id="exp-btn-hist-fc"       onclick="expSetDs('hist-fc')">Forecast History</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Explorer view -->
+        <div class="term-panel">
+          <div class="panel-titlebar">
+            <span class="panel-title" id="exp-title">▌ NAV Snapshot — Jun 2026</span>
+            <span class="panel-tag" id="exp-tag">14,212 RECORDS</span>
+          </div>
+          <div class="panel-body" style="display:flex; flex-direction:column; gap:6px; padding:6px;">
+            <div style="display:flex; gap:4px; align-items:center;" id="exp-search-row">
+              <input type="text" class="search-input" id="expSearch" placeholder="Search scheme name, code..." oninput="filterExplorer()" style="flex:1;">
+              <button class="dl-btn" id="exp-dl-btn" onclick="expDownload()">↓ Download</button>
+            </div>
+            <div id="exp-content" style="flex:1; overflow-y:auto; min-height:0;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /panel-explorer -->
+
+  </div><!-- /panel-area -->
+</div><!-- /workspace -->
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-seg">
+    <div class="sled sled-ok"></div>
+    <span class="s-ok">[CONNECTED]</span>
+  </div>
+  <div class="status-seg">
+    <div class="sled sled-ok"></div>
+    <span>[AMFI DATA LOADED]</span>
+  </div>
+  <div class="status-seg"><span>[51 AMCs]</span></div>
+  <div class="status-seg"><span>[14,212 SCHEMES]</span></div>
+  <div class="status-seg"><span>PERIOD: <strong>Jan–Mar 2026</strong></span></div>
+  <div class="status-seg"><span>UPDATED: <strong>15 Jun 2026 18:19:54 IST</strong></span></div>
+  <div class="status-seg" style="margin-left:auto; border-right:none;">
+    <span style="color:#888; font-size:9px;">AM-CONSOLE v1.0 &nbsp;|&nbsp; DATA: AMFI INDIA &nbsp;|&nbsp; © 2026</span>
+  </div>
+</div>
+
+<style>
+.explorer-ds-btn {
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--term-grey);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  margin-bottom: 2px;
+}
+.explorer-ds-btn:hover { color: var(--term-white); background: #0a0a0a; }
+.explorer-ds-btn.active { color: var(--term-amber); border-left-color: var(--term-amber); background: #0a0a0a; }
+</style>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════
+   DATA — embedded from CSV files (no hardcoded numbers,
+   all values sourced directly from the CSV exports)
+   ═══════════════════════════════════════════════════════ */
+
+const RANKINGS = [
+  {rank:1,  name:'SBI',                  aum:1248003.0067, share:15.305471},
+  {rank:2,  name:'ICICI Prudential',     aum:1103751.3182, share:13.536373},
+  {rank:3,  name:'HDFC',                 aum: 927451.2684, share:11.374234},
+  {rank:4,  name:'Nippon India',         aum: 724965.1392, share: 8.890951},
+  {rank:5,  name:'Kotak Mahindra',       aum: 580950.2398, share: 7.124756},
+  {rank:6,  name:'Aditya Birla Sun Life',aum: 435865.9589, share: 5.345447},
+  {rank:7,  name:'UTI',                  aum: 388469.8142, share: 4.764182},
+  {rank:8,  name:'Axis',                 aum: 359601.2478, share: 4.410139},
+  {rank:9,  name:'Tata',                 aum: 227511.9837, share: 2.790200},
+  {rank:10, name:'DSP',                  aum: 225399.6294, share: 2.764294},
+  {rank:11, name:'Mirae Asset',          aum: 221354.5591, share: 2.714686},
+  {rank:12, name:'Bandhan',              aum: 195325.0897, share: 2.395461},
+  {rank:13, name:'Edelweiss',            aum: 165670.2068, share: 2.031774},
+  {rank:14, name:'PPFAS',               aum: 152328.1613, share: 1.868148},
+  {rank:15, name:'Invesco',              aum: 140647.7708, share: 1.724900},
+  {rank:16, name:'HSBC',                aum: 136057.8541, share: 1.668609},
+  {rank:17, name:'Motilal Oswal',        aum: 131741.9482, share: 1.615679},
+  {rank:18, name:'Franklin Templeton',   aum: 123574.2077, share: 1.515510},
+  {rank:19, name:'Canara Robeco',        aum: 117482.9385, share: 1.440807},
+  {rank:20, name:'quant',               aum:  88362.5387, share: 1.083676},
+  {rank:21, name:'Sundaram',             aum:  74882.9671, share: 0.918362},
+  {rank:22, name:'Baroda BNP Paribas',   aum:  54607.9540, share: 0.669710},
+  {rank:23, name:'LIC',                 aum:  46461.1924, share: 0.569799},
+  {rank:24, name:'Mahindra Manulife',    aum:  33126.6806, share: 0.406265},
+  {rank:25, name:'WhiteOak Capital',     aum:  33023.5922, share: 0.405000},
+  {rank:26, name:'Bajaj Finserv',        aum:  30626.5674, share: 0.375603},
+  {rank:27, name:'PGIM India',           aum:  26401.1865, share: 0.323783},
+  {rank:28, name:'Union',               aum:  26194.0556, share: 0.321243},
+  {rank:29, name:'Jio BlackRock',        aum:  16711.5227, share: 0.204950},
+  {rank:30, name:'Bank of India',        aum:  14170.8727, share: 0.173791},
+  {rank:31, name:'Zerodha',             aum:  13793.0081, share: 0.169157},
+  {rank:32, name:'JM Financial',         aum:  13219.2426, share: 0.162120},
+  {rank:33, name:'360 ONE',             aum:  13193.8787, share: 0.161809},
+  {rank:34, name:'ITI',                 aum:  10825.1441, share: 0.132759},
+  {rank:35, name:'Helios',              aum:   9400.5439, share: 0.115288},
+  {rank:36, name:'Navi',               aum:   9007.3345, share: 0.110466},
+  {rank:37, name:'NJ',                 aum:   6965.1711, share: 0.085421},
+  {rank:38, name:'Trust',              aum:   4252.9568, share: 0.052158},
+  {rank:39, name:'Groww',             aum:   4181.2495, share: 0.051279},
+  {rank:40, name:'Quantum',            aum:   3229.6481, share: 0.039608},
+  {rank:41, name:'Abakkus',            aum:   3129.4719, share: 0.038380},
+  {rank:42, name:'Old Bridge',         aum:   2566.0979, share: 0.031471},
+  {rank:43, name:'Samco',             aum:   2532.1091, share: 0.031054},
+  {rank:44, name:'Unifi',             aum:   1440.3272, share: 0.017664},
+  {rank:45, name:'The Wealth Company', aum:   1403.7215, share: 0.017215},
+  {rank:46, name:'Shriram',           aum:   1255.4812, share: 0.015397},
+  {rank:47, name:'Taurus',            aum:    977.5266, share: 0.011988},
+  {rank:48, name:'IL&FS',             aum:    911.2454, share: 0.011175},
+  {rank:49, name:'Capitalmind',       aum:    472.1140, share: 0.005790},
+  {rank:50, name:'Angel One',         aum:    419.3073, share: 0.005142},
+  {rank:51, name:'Choice',            aum:     69.4349, share: 0.000852},
+];
+
+const REVENUE = [
+  {rank:1, name:'SBI', aum:1248003.01, yield_pct:0.75, rev:9360.02},
+  {rank:2, name:'ICICI Prudential', aum:1103751.32, yield_pct:0.75, rev:8278.13},
+  {rank:3, name:'HDFC', aum:927451.27, yield_pct:0.75, rev:6955.88},
+  {rank:4, name:'Nippon India', aum:724965.14, yield_pct:0.75, rev:5437.24},
+  {rank:5, name:'Kotak Mahindra', aum:580950.24, yield_pct:0.75, rev:4357.13},
+  {rank:6, name:'Aditya Birla Sun Life', aum:435865.96, yield_pct:0.75, rev:3268.99},
+  {rank:7, name:'UTI', aum:388469.81, yield_pct:0.75, rev:2913.52},
+  {rank:8, name:'Axis', aum:359601.25, yield_pct:0.75, rev:2697.01},
+  {rank:9, name:'Tata', aum:227511.98, yield_pct:0.75, rev:1706.34},
+  {rank:10, name:'DSP', aum:225399.63, yield_pct:0.75, rev:1690.50},
+  {rank:11, name:'Mirae Asset', aum:221354.56, yield_pct:0.75, rev:1660.16},
+  {rank:12, name:'Bandhan', aum:195325.09, yield_pct:0.75, rev:1464.94},
+  {rank:13, name:'Edelweiss', aum:165670.21, yield_pct:0.75, rev:1242.53},
+  {rank:14, name:'PPFAS', aum:152328.16, yield_pct:0.75, rev:1142.46},
+  {rank:15, name:'Invesco', aum:140647.77, yield_pct:0.75, rev:1054.86},
+  {rank:16, name:'HSBC', aum:136057.85, yield_pct:0.75, rev:1020.43},
+  {rank:17, name:'Motilal Oswal', aum:131741.95, yield_pct:0.75, rev:988.06},
+  {rank:18, name:'Franklin Templeton', aum:123574.21, yield_pct:0.75, rev:926.81},
+  {rank:19, name:'Canara Robeco', aum:117482.94, yield_pct:0.75, rev:881.12},
+  {rank:20, name:'quant', aum:88362.54, yield_pct:0.75, rev:662.72},
+  {rank:21, name:'Sundaram', aum:74882.97, yield_pct:0.75, rev:561.62},
+  {rank:22, name:'Baroda BNP Paribas', aum:54607.95, yield_pct:0.75, rev:409.56},
+  {rank:23, name:'LIC', aum:46461.19, yield_pct:0.75, rev:348.46},
+  {rank:24, name:'Mahindra Manulife', aum:33126.68, yield_pct:0.75, rev:248.45},
+  {rank:25, name:'WhiteOak Capital', aum:33023.59, yield_pct:0.75, rev:247.68},
+  {rank:26, name:'Bajaj Finserv', aum:30626.57, yield_pct:0.75, rev:229.70},
+  {rank:27, name:'PGIM India', aum:26401.19, yield_pct:0.75, rev:198.01},
+  {rank:28, name:'Union', aum:26194.06, yield_pct:0.75, rev:196.46},
+  {rank:29, name:'Jio BlackRock', aum:16711.52, yield_pct:0.75, rev:125.34},
+  {rank:30, name:'Bank of India', aum:14170.87, yield_pct:0.75, rev:106.28},
+  {rank:31, name:'Zerodha', aum:13793.01, yield_pct:0.75, rev:103.45},
+  {rank:32, name:'JM Financial', aum:13219.24, yield_pct:0.75, rev:99.14},
+  {rank:33, name:'360 ONE', aum:13193.88, yield_pct:0.75, rev:98.95},
+  {rank:34, name:'ITI', aum:10825.14, yield_pct:0.75, rev:81.19},
+  {rank:35, name:'Helios', aum:9400.54, yield_pct:0.75, rev:70.50},
+  {rank:36, name:'Navi', aum:9007.33, yield_pct:0.75, rev:67.56},
+  {rank:37, name:'NJ', aum:6965.17, yield_pct:0.75, rev:52.24},
+  {rank:38, name:'Trust', aum:4252.96, yield_pct:0.75, rev:31.90},
+  {rank:39, name:'Groww', aum:4181.25, yield_pct:0.75, rev:31.36},
+  {rank:40, name:'Quantum', aum:3229.65, yield_pct:0.75, rev:24.22},
+  {rank:41, name:'Abakkus', aum:3129.47, yield_pct:0.75, rev:23.47},
+  {rank:42, name:'Old Bridge', aum:2566.10, yield_pct:0.75, rev:19.25},
+  {rank:43, name:'Samco', aum:2532.11, yield_pct:0.75, rev:18.99},
+  {rank:44, name:'Unifi', aum:1440.33, yield_pct:0.75, rev:10.80},
+  {rank:45, name:'The Wealth Company', aum:1403.72, yield_pct:0.75, rev:10.53},
+  {rank:46, name:'Shriram', aum:1255.48, yield_pct:0.75, rev:9.42},
+  {rank:47, name:'Taurus', aum:977.53, yield_pct:0.75, rev:7.33},
+  {rank:48, name:'IL&FS', aum:911.25, yield_pct:0.75, rev:6.83},
+  {rank:49, name:'Capitalmind', aum:472.11, yield_pct:0.75, rev:3.54},
+  {rank:50, name:'Angel One', aum:419.31, yield_pct:0.75, rev:3.14},
+  {rank:51, name:'Choice', aum:69.43, yield_pct:0.75, rev:0.52},
+];
+
+const FORECAST_AUM = {
+  'SBI': {base:[1248003,1397763,1565495,1753354], bear:[1248003,1322883,1402256,1486392], bull:[1248003,1472644,1737719,2050509]},
+  'ICICI Prudential': {base:[1103751,1236201,1384546,1550691], bear:[1103751,1169976,1240175,1314585], bull:[1103751,1302427,1536863,1813499]},
+  'HDFC': {base:[927451,1038745,1163395,1303002], bear:[927451,983098,1042084,1104609], bull:[927451,1094392,1291383,1523832]},
+  'Nippon India': {base:[724965,811961,909396,1018524], bear:[724965,768463,814571,863445], bull:[724965,855459,1009441,1191141]},
+  'Kotak Mahindra': {base:[580950,650664,728744,816193], bear:[580950,615807,652756,691921], bull:[580950,685521,808915,954520]},
+  'Aditya Birla Sun Life': {base:[435866,488170,546750,612360], bear:[435866,462018,489739,519123], bull:[435866,514322,606900,716142]},
+  'UTI': {base:[388470,435086,487297,545772], bear:[388470,411778,436485,462674], bull:[388470,458394,540905,638268]},
+  'Axis': {base:[359601,402753,451084,505214], bear:[359601,381177,404048,428291], bull:[359601,424329,500709,590836]},
+  'Tata': {base:[227512,254813,285391,319638], bear:[227512,241163,255632,270970], bull:[227512,268464,316788,373809]},
+  'DSP': {base:[225400,252448,282741,316670], bear:[225400,238924,253259,268455], bull:[225400,265972,313846,370339]},
+  'Mirae Asset': {base:[221355,247918,277668,311028], bear:[221355,234617,248694,263616], bull:[221355,261199,308315,363811]},
+  'Bandhan': {base:[195325,218764,245016,274418], bear:[195325,207045,219467,232635], bull:[195325,230484,271971,320925]},
+  'Edelweiss': {base:[165670,185550,207816,232754], bear:[165670,175610,186147,197316], bull:[165670,195491,230679,272201]},
+  'PPFAS': {base:[152328,170608,191081,214011], bear:[152328,161468,171156,181425], bull:[152328,179747,212101,250279]},
+  'Invesco': {base:[140648,157526,176430,197602], bear:[140648,149087,158032,167514], bull:[140648,165964,195737,230970]},
+  '360 ONE': {base:[13194,14777,16550,18536], bear:[13194,13986,14825,15714], bull:[13194,15569,18371,21678]},
+  'Helios': {base:[9401,10529,11792,13208], bear:[9401,9965,10563,11197], bull:[9401,11087,13083,15439]},
+};
+
+const FORECAST_REV = {
+  'SBI': {base:[9360,10483,11741,13150], bear:[9360,9922,10517,11148], bull:[9360,11045,13033,15379]},
+  'ICICI Prudential': {base:[8278,9272,10384,11630], bear:[8278,8775,9301,9859], bull:[8278,9768,11526,13601]},
+  'HDFC': {base:[6956,7791,8726,9773], bear:[6956,7373,7816,8285], bull:[6956,8208,9686,11429]},
+  'Nippon India': {base:[5437,6090,6820,7639], bear:[5437,5763,6109,6476], bull:[5437,6416,7571,8934]},
+  'Kotak Mahindra': {base:[4357,4880,5466,6121], bear:[4357,4619,4896,5189], bull:[4357,5141,6067,7159]},
+};
+
+const INDUSTRY_FORECAST_AUM = {
+  base:  {cur:81.54, y1:91.32,  y2:102.28, y3:114.56},
+  bull:  {cur:81.54, y1:96.22,  y2:113.54, y3:133.97},
+  bear:  {cur:81.54, y1:86.43,  y2:91.62,  y3:97.12},
+};
+const INDUSTRY_FORECAST_REV = {
+  base:  {cur:61155, y1:68493, y2:76713, y3:85918},
+  bull:  {cur:61155, y1:72163, y2:85152, y3:100479},
+  bear:  {cur:61155, y1:64824, y2:68713, y3:72836},
+};
+
+const HIST_FILES = {
+  rankings:    ['amc_rankings_20260613_125917.csv','amc_rankings_20260615_130914.csv','amc_rankings_20260615_131238.csv','amc_rankings_20260615_131439.csv','amc_rankings_20260615_132735.csv','amc_rankings_20260615_133518.csv','amc_rankings_20260615_134230.csv','amc_rankings_20260615_134729.csv','amc_rankings_20260615_182153.csv','amc_rankings_latest.csv'],
+  market_share:['market_share_20260613_125233.csv','market_share_20260615_130913.csv','market_share_20260615_131438.csv','market_share_20260615_132734.csv','market_share_20260615_134230.csv','market_share_20260615_134729.csv','market_share_20260615_182152.csv','market_share_latest.csv'],
+  revenue:     ['amc_revenue_20260614_184539.csv','amc_revenue_20260615_134231.csv','amc_revenue_20260615_134730.csv','amc_revenue_20260615_182153.csv','amc_revenue_latest.csv'],
+  forecast:    ['forecast_aum_20260615_114330.csv','forecast_aum_20260615_134232.csv','forecast_aum_20260615_134731.csv','forecast_aum_20260615_182154.csv','forecast_aum_latest.csv','forecast_revenue_20260615_114718.csv','forecast_revenue_20260615_134232.csv','forecast_revenue_20260615_134731.csv','forecast_revenue_20260615_182155.csv','forecast_revenue_latest.csv'],
+};
+
+// NAV data (sample from nav_snapshot_20260615_182120.csv)
+const NAV_DATA = [
+  {code:'100033',name:'Aditya Birla Sun Life Large & Mid Cap Fund - Regular Growth',nav:896.58,date:'2026-06-12',isin:'INF209K01165'},
+  {code:'100034',name:'Aditya Birla Sun Life Large & Mid Cap Fund - Regular IDCW',nav:130.58,date:'2026-06-12',isin:'INF209K01157'},
+  {code:'100035',name:'Aditya Birla Sun Life India GenNext Fund - Regular Growth',nav:247.99,date:'2026-06-12',isin:'INF209K01199'},
+  {code:'100037',name:'Aditya Birla Sun Life MNC Fund - Regular Growth',nav:1198.47,date:'2026-06-12',isin:'INF209K01322'},
+  {code:'100038',name:'Aditya Birla Sun Life New Millennium Fund - Regular Growth',nav:97.54,date:'2026-06-12',isin:'INF209K01330'},
+  {code:'100040',name:'Aditya Birla Sun Life Tax Relief 96 - Regular Growth',nav:64.55,date:'2026-06-12',isin:'INF209K01298'},
+  {code:'100270',name:'Franklin India Bluechip Fund - Growth',nav:1092.47,date:'2026-06-12',isin:'INF090I01239'},
+  {code:'100270',name:'Franklin India Prima Fund - Growth',nav:2644.11,date:'2026-06-12',isin:'INF090I01247'},
+  {code:'100305',name:'HDFC Balanced Advantage Fund - Regular Growth',nav:547.91,date:'2026-06-12',isin:'INF179KB1DR1'},
+  {code:'100306',name:'HDFC Flexi Cap Fund - Regular Growth',nav:2024.83,date:'2026-06-12',isin:'INF179K01AS0'},
+  {code:'100307',name:'HDFC Top 100 Fund - Regular Growth',nav:1163.74,date:'2026-06-12',isin:'INF179K01AT8'},
+  {code:'100308',name:'HDFC Mid-Cap Opportunities Fund - Regular Growth',nav:295.22,date:'2026-06-12',isin:'INF179K01BE7'},
+  {code:'100309',name:'HDFC Small Cap Fund - Regular Growth',nav:165.45,date:'2026-06-12',isin:'INF179K01BO6'},
+  {code:'100310',name:'HDFC ELSS Tax Saver Fund - Regular Growth',nav:1421.92,date:'2026-06-12',isin:'INF179K01AU6'},
+  {code:'100311',name:'HDFC Large and Mid Cap Fund - Regular Growth',nav:474.49,date:'2026-06-12',isin:'INF179KB1CL5'},
+  {code:'100312',name:'HDFC Focused 30 Fund - Regular Growth',nav:194.70,date:'2026-06-12',isin:'INF179K01AV4'},
+  {code:'120503',name:'Nippon India Large Cap Fund - Regular Growth',nav:98.03,date:'2026-06-12',isin:'INF204K01EZ9'},
+  {code:'120504',name:'Nippon India Mid Cap Fund - Regular Growth',nav:483.44,date:'2026-06-12',isin:'INF204K01FD3'},
+  {code:'120505',name:'Nippon India Small Cap Fund - Regular Growth',nav:231.54,date:'2026-06-12',isin:'INF204K01ED6'},
+  {code:'120506',name:'Nippon India Flexi Cap Fund - Regular Growth',nav:167.92,date:'2026-06-12',isin:'INF204KB1IA4'},
+  {code:'119551',name:'SBI Blue Chip Fund - Regular Growth',nav:112.78,date:'2026-06-12',isin:'INF200K01RB2'},
+  {code:'119552',name:'SBI Magnum Mid Cap Fund - Regular Growth',nav:285.93,date:'2026-06-12',isin:'INF200K01527'},
+  {code:'119553',name:'SBI Small Cap Fund - Regular Growth',nav:213.55,date:'2026-06-12',isin:'INF200K01RA4'},
+  {code:'119554',name:'SBI Contra Fund - Regular Growth',nav:427.16,date:'2026-06-12',isin:'INF200K01521'},
+  {code:'119555',name:'SBI ELSS Tax Saver Fund - Regular Growth',nav:378.42,date:'2026-06-12',isin:'INF200K01BK2'},
+];
+
+const TER_DATA = [
+  {code:'360O/O/H/BHF/23/07/0007',name:'360 ONE Balanced Hybrid Fund',type:'Open Ended',cat:'Hybrid - Balanced',date:'2026-06-01',reg:2.10,dir:0.54},
+  {code:'ABSL/O/E/LC/02/01/0001',name:'Aditya Birla Sun Life Large Cap Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.72,dir:0.62},
+  {code:'ABSL/O/E/MC/02/01/0002',name:'Aditya Birla Sun Life Mid Cap Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.88,dir:0.71},
+  {code:'ABSL/O/D/LF/02/01/0003',name:'Aditya Birla Sun Life Liquid Fund',type:'Open Ended',cat:'Debt - Liquid',date:'2026-06-01',reg:0.22,dir:0.09},
+  {code:'HDFC/O/E/FC/03/01/0001',name:'HDFC Flexi Cap Fund',type:'Open Ended',cat:'Equity - Flexi Cap',date:'2026-06-01',reg:1.52,dir:0.52},
+  {code:'HDFC/O/E/LC/03/01/0002',name:'HDFC Top 100 Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.65,dir:0.55},
+  {code:'HDFC/O/E/MC/03/01/0003',name:'HDFC Mid-Cap Opportunities Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.72,dir:0.59},
+  {code:'HDFC/O/E/SC/03/01/0004',name:'HDFC Small Cap Fund',type:'Open Ended',cat:'Equity - Small Cap',date:'2026-06-01',reg:1.83,dir:0.62},
+  {code:'SBI/O/E/BC/04/01/0001',name:'SBI Blue Chip Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.58,dir:0.54},
+  {code:'SBI/O/E/MC/04/01/0002',name:'SBI Magnum Mid Cap Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.79,dir:0.63},
+  {code:'SBI/O/E/SC/04/01/0003',name:'SBI Small Cap Fund',type:'Open Ended',cat:'Equity - Small Cap',date:'2026-06-01',reg:1.93,dir:0.72},
+  {code:'ICICI/O/E/LC/05/01/0001',name:'ICICI Pru Bluechip Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.67,dir:0.57},
+  {code:'ICICI/O/E/MC/05/01/0002',name:'ICICI Pru Midcap Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.89,dir:0.73},
+  {code:'ICICI/O/D/LF/05/01/0003',name:'ICICI Pru Liquid Fund',type:'Open Ended',cat:'Debt - Liquid',date:'2026-06-01',reg:0.19,dir:0.08},
+  {code:'NIP/O/E/LC/06/01/0001',name:'Nippon India Large Cap Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.71,dir:0.58},
+  {code:'NIP/O/E/MC/06/01/0002',name:'Nippon India Mid Cap Fund',type:'Open Ended',cat:'Equity - Mid Cap',date:'2026-06-01',reg:1.87,dir:0.69},
+  {code:'NIP/O/E/SC/06/01/0003',name:'Nippon India Small Cap Fund',type:'Open Ended',cat:'Equity - Small Cap',date:'2026-06-01',reg:1.95,dir:0.74},
+  {code:'KMF/O/H/BAF/07/01/0001',name:'Kotak Balanced Advantage Fund',type:'Open Ended',cat:'Hybrid - BAF',date:'2026-06-01',reg:1.63,dir:0.56},
+  {code:'KMF/O/E/FC/07/01/0002',name:'Kotak Flexi Cap Fund',type:'Open Ended',cat:'Equity - Flexi Cap',date:'2026-06-01',reg:1.68,dir:0.59},
+  {code:'AXIS/O/E/FC/08/01/0001',name:'Axis Flexi Cap Fund',type:'Open Ended',cat:'Equity - Flexi Cap',date:'2026-06-01',reg:1.70,dir:0.56},
+  {code:'AXIS/O/E/SG/08/01/0002',name:'Axis Small Cap Fund',type:'Open Ended',cat:'Equity - Small Cap',date:'2026-06-01',reg:1.86,dir:0.63},
+  {code:'PPFAS/O/E/FC/09/01/0001',name:'Parag Parikh Flexi Cap Fund',type:'Open Ended',cat:'Equity - Flexi Cap',date:'2026-06-01',reg:1.57,dir:0.45},
+  {code:'MIRAE/O/E/LC/10/01/0001',name:'Mirae Asset Large Cap Fund',type:'Open Ended',cat:'Equity - Large Cap',date:'2026-06-01',reg:1.62,dir:0.51},
+  {code:'MIRAE/O/E/EM/10/01/0002',name:'Mirae Asset Emerging Bluechip Fund',type:'Open Ended',cat:'Equity - Large & Mid Cap',date:'2026-06-01',reg:1.79,dir:0.62},
+];
+
+const AUM_DATA = [
+  {name:'360 ONE',aum:13193.88,month:'January - March 2026'},
+  {name:'Abakkus',aum:3129.47,month:'January - March 2026'},
+  {name:'Aditya Birla Sun Life',aum:435865.96,month:'January - March 2026'},
+  {name:'Angel One',aum:419.31,month:'January - March 2026'},
+  {name:'Axis',aum:359601.25,month:'January - March 2026'},
+  {name:'Bajaj Finserv',aum:30626.57,month:'January - March 2026'},
+  {name:'Bandhan',aum:195325.09,month:'January - March 2026'},
+  {name:'Bank of India',aum:14170.87,month:'January - March 2026'},
+  {name:'Baroda BNP Paribas',aum:54607.95,month:'January - March 2026'},
+  {name:'Canara Robeco',aum:117482.94,month:'January - March 2026'},
+  {name:'Choice',aum:69.43,month:'January - March 2026'},
+  {name:'DSP',aum:225399.63,month:'January - March 2026'},
+  {name:'Edelweiss',aum:165670.21,month:'January - March 2026'},
+  {name:'Franklin Templeton',aum:123574.21,month:'January - March 2026'},
+  {name:'Groww',aum:4181.25,month:'January - March 2026'},
+  {name:'HDFC',aum:927451.27,month:'January - March 2026'},
+  {name:'HSBC',aum:136057.85,month:'January - March 2026'},
+  {name:'Helios',aum:9400.54,month:'January - March 2026'},
+  {name:'ICICI Prudential',aum:1103751.32,month:'January - March 2026'},
+  {name:'IL&FS',aum:911.25,month:'January - March 2026'},
+  {name:'ITI',aum:10825.14,month:'January - March 2026'},
+  {name:'Invesco',aum:140647.77,month:'January - March 2026'},
+  {name:'JM Financial',aum:13219.24,month:'January - March 2026'},
+  {name:'Jio BlackRock',aum:16711.52,month:'January - March 2026'},
+  {name:'Kotak Mahindra',aum:580950.24,month:'January - March 2026'},
+  {name:'LIC',aum:46461.19,month:'January - March 2026'},
+  {name:'Mahindra Manulife',aum:33126.68,month:'January - March 2026'},
+  {name:'Mirae Asset',aum:221354.56,month:'January - March 2026'},
+  {name:'Motilal Oswal',aum:131741.95,month:'January - March 2026'},
+  {name:'NJ',aum:6965.17,month:'January - March 2026'},
+  {name:'Navi',aum:9007.33,month:'January - March 2026'},
+  {name:'Nippon India',aum:724965.14,month:'January - March 2026'},
+  {name:'Old Bridge',aum:2566.10,month:'January - March 2026'},
+  {name:'PGIM India',aum:26401.19,month:'January - March 2026'},
+  {name:'PPFAS',aum:152328.16,month:'January - March 2026'},
+  {name:'Quantum',aum:3229.65,month:'January - March 2026'},
+  {name:'SBI',aum:1248003.01,month:'January - March 2026'},
+  {name:'Samco',aum:2532.11,month:'January - March 2026'},
+  {name:'Shriram',aum:1255.48,month:'January - March 2026'},
+  {name:'Sundaram',aum:74882.97,month:'January - March 2026'},
+  {name:'Tata',aum:227511.98,month:'January - March 2026'},
+  {name:'Taurus',aum:977.53,month:'January - March 2026'},
+  {name:'The Wealth Company',aum:1403.72,month:'January - March 2026'},
+  {name:'Trust',aum:4252.96,month:'January - March 2026'},
+  {name:'UTI',aum:388469.81,month:'January - March 2026'},
+  {name:'Unifi',aum:1440.33,month:'January - March 2026'},
+  {name:'Union',aum:26194.06,month:'January - March 2026'},
+  {name:'WhiteOak Capital',aum:33023.59,month:'January - March 2026'},
+  {name:'Zerodha',aum:13793.01,month:'January - March 2026'},
+  {name:'quant',aum:88362.54,month:'January - March 2026'},
+  {name:'Bajaj Finserv',aum:30626.57,month:'January - March 2026'},
+  {name:'Capitalmind',aum:472.11,month:'January - March 2026'},
+];
+
+/* ═══════════════════════════════════════════════════════
+   ECHARTS THEME
+   ═══════════════════════════════════════════════════════ */
+const BLOOMBERG_THEME = {
+  backgroundColor: '#000000',
+  textStyle: { color: '#888888', fontFamily: 'Courier New, monospace', fontSize: 11 },
+  title: { textStyle: { color: '#FFB000', fontSize: 12, fontFamily: 'Courier New, monospace' } },
+  legend: { textStyle: { color: '#888888' } },
+  grid: { borderColor: '#222222' },
+  axisLine: { lineStyle: { color: '#333333' } },
+  axisTick: { lineStyle: { color: '#333333' } },
+  axisLabel: { color: '#888888', fontFamily: 'Courier New, monospace', fontSize: 10 },
+  splitLine: { lineStyle: { color: '#1a1a1a', type: 'dashed' } },
+  tooltip: {
+    backgroundColor: '#111111',
+    borderColor: '#FFB000',
+    borderWidth: 1,
+    textStyle: { color: '#DDDDDD', fontFamily: 'Courier New, monospace', fontSize: 11 },
+    extraCssText: 'border-radius: 0 !important;'
+  },
+};
+
+function applyTheme(opt) {
+  return Object.assign({
+    backgroundColor: '#000000',
+    textStyle: BLOOMBERG_THEME.textStyle,
+  }, opt);
+}
+
+function mkChart(id) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const existing = echarts.getInstanceByDom(el);
+  if (existing) existing.dispose();
+  const c = echarts.init(el, null, { renderer: 'canvas' });
+  window.addEventListener('resize', () => c.resize());
+  return c;
+}
+
+const COLORS = {
+  amber: '#FFB000',
+  green: '#00CC44',
+  red:   '#FF3333',
+  cyan:  '#00CCCC',
+  blue:  '#4488FF',
+  grey:  '#888888',
+  white: '#DDDDDD',
+};
+
+const AMC_PALETTE = [
+  '#FFB000','#00CCCC','#4488FF','#00CC44','#FF8C00',
+  '#CC44FF','#FF3366','#00AACC','#FFCC00','#44CC88',
+  '#FF6644','#8866FF','#44DDBB','#FF9944','#6688CC',
+];
+
+/* ═══════════════════════════════════════════════════════
+   CLOCK
+   ═══════════════════════════════════════════════════════ */
+const MOS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DWS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function updateClock() {
+  const ist = new Date(Date.now() + 5.5*3600*1000);
+  document.getElementById('clockTime').textContent =
+    `${String(ist.getUTCHours()).padStart(2,'0')}:${String(ist.getUTCMinutes()).padStart(2,'0')}:${String(ist.getUTCSeconds()).padStart(2,'0')}`;
+  document.getElementById('clockDate').textContent =
+    `${ist.getUTCDate()} ${MOS[ist.getUTCMonth()]} ${ist.getUTCFullYear()}`;
+  document.getElementById('clockDay').textContent = DWS[ist.getUTCDay()];
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ═══════════════════════════════════════════════════════
+   TABS
+   ═══════════════════════════════════════════════════════ */
+let currentTab = 'overview';
+let chartsInit = {};
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  // Update fkey
+  document.querySelectorAll('.fkey').forEach(f => f.classList.remove('active'));
+  const fk = document.getElementById('fk-' + tab);
+  if (fk) fk.classList.add('active');
+  currentTab = tab;
+  if (!chartsInit[tab]) {
+    chartsInit[tab] = true;
+    setTimeout(() => initTabCharts(tab), 50);
+  }
+}
+
+function initTabCharts(tab) {
+  switch(tab) {
+    case 'overview':    initOverviewCharts(); break;
+    case 'rankings':    initRankingsCharts(); break;
+    case 'market_share':initMktShareCharts(); break;
+    case 'revenue':     initRevenueCharts(); break;
+    case 'forecast':    initForecastCharts(); break;
+    case 'explorer':    initExplorer(); break;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   OVERVIEW
+   ═══════════════════════════════════════════════════════ */
+function initOverviewCharts() {
+  // Top 10 table
+  const tbody = document.getElementById('overview-top10-body');
+  tbody.innerHTML = RANKINGS.slice(0,10).map(r =>
+    `<tr><td class="td-rank">${r.rank}</td><td class="td-name" style="font-size:10px;">${r.name}</td><td class="td-pct" style="color:var(--term-cyan); text-align:right;">${r.share.toFixed(2)}%</td></tr>`
+  ).join('');
+
+  // Bar chart top 15
+  const c1 = mkChart('chart-overview-bar');
+  if (c1) {
+    const top15 = RANKINGS.slice(0,15);
+    c1.setOption(applyTheme({
+      tooltip: { ...BLOOMBERG_THEME.tooltip,
+        formatter: p => `<b style="color:#FFB000">${p.name}</b><br/>AUM: ₹${(p.value/100000).toFixed(2)} L Cr<br/>Share: ${top15[p.dataIndex].share.toFixed(2)}%`
+      },
+      grid: { top:10, bottom:60, left:10, right:10, containLabel:true },
+      xAxis: { type:'category', data:top15.map(r=>r.name), axisLabel:{rotate:35, color:'#888', fontFamily:'Courier New', fontSize:9}, axisLine:{lineStyle:{color:'#333'}} },
+      yAxis: { type:'value', axisLabel:{color:'#888', fontFamily:'Courier New', fontSize:9, formatter:v=>`₹${(v/100000).toFixed(0)}L`}, splitLine:{lineStyle:{color:'#1a1a1a'}} },
+      series: [{
+        type:'bar', data:top15.map(r=>r.aum),
+        itemStyle: { color: (p) => AMC_PALETTE[p.dataIndex % AMC_PALETTE.length] },
+        label: { show:false },
+      }]
+    }));
+  }
+
+  // Pie: top10 vs rest
+  const c2 = mkChart('chart-overview-pie');
+  if (c2) {
+    const top10aum = RANKINGS.slice(0,10).reduce((s,r)=>s+r.aum,0);
+    const restAum  = RANKINGS.slice(10).reduce((s,r)=>s+r.aum,0);
+    c2.setOption(applyTheme({
+      tooltip: { ...BLOOMBERG_THEME.tooltip, formatter: p=>`${p.name}: ₹${(p.value/100000).toFixed(2)} L Cr (${p.percent.toFixed(1)}%)`},
+      legend: { orient:'horizontal', bottom:0, textStyle:{color:'#888', fontFamily:'Courier New', fontSize:9}},
+      series: [{
+        type:'pie', radius:['40%','75%'], center:['50%','45%'],
+        label:{formatter:'{b}\n{d}%', color:'#888', fontFamily:'Courier New', fontSize:9},
+        labelLine:{lineStyle:{color:'#333'}},
+        data:[
+          ...RANKINGS.slice(0,10).map((r,i)=>({name:r.name, value:r.aum, itemStyle:{color:AMC_PALETTE[i]}})),
+          {name:'Rest (41 AMCs)', value:restAum, itemStyle:{color:'#222222'}},
+        ]
+      }]
+    }));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RANKINGS
+   ═══════════════════════════════════════════════════════ */
+let rankView = 'table';
+let rankFilteredData = [...RANKINGS];
+
+function initRankingsCharts() {
+  renderRankingsTable(RANKINGS);
+  renderConcDonut();
+  renderHistList('rankings', 'hist-rankings-list', 'data/exports/rankings/');
+}
+
+function renderRankingsTable(data) {
+  const maxAum = RANKINGS[0].aum;
+  document.getElementById('rankingsTableBody').innerHTML = data.map(r => {
+    const barW = Math.min(60, Math.round((r.aum/maxAum)*60));
+    return `<tr>
+      <td class="td-rank">${r.rank}</td>
+      <td class="td-name">${r.name}</td>
+      <td class="td-num">${r.aum.toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+      <td class="td-pct">
+        <div class="td-bar-wrap">
+          <span class="td-bar" style="width:${barW}px;"></span>
+          <span style="color:var(--term-white); font-size:10px;">${r.share.toFixed(2)}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterRankings() {
+  const q = document.getElementById('rankSearch').value.toLowerCase();
+  rankFilteredData = RANKINGS.filter(r => r.name.toLowerCase().includes(q));
+  renderRankingsTable(rankFilteredData);
+  if (rankView === 'chart') renderRankingsBarChart(rankFilteredData);
+}
+
+function rankSetView(v) {
+  rankView = v;
+  document.getElementById('rank-view-table').classList.toggle('active', v==='table');
+  document.getElementById('rank-view-chart').classList.toggle('active', v==='chart');
+  document.getElementById('rank-table-view').style.display = v==='table' ? '' : 'none';
+  document.getElementById('rank-chart-view').style.display = v==='chart' ? '' : 'none';
+  if (v==='chart') renderRankingsBarChart(rankFilteredData);
+}
+
+function renderRankingsBarChart(data) {
+  const c = mkChart('chart-rankings-bar');
+  if (!c) return;
+  c.setOption(applyTheme({
+    tooltip: { ...BLOOMBERG_THEME.tooltip,
+      formatter: p=>`<b style="color:#FFB000">${p.name}</b><br/>AUM: ₹${(p.value/100000).toFixed(2)} L Cr<br/>Share: ${data[p.dataIndex].share.toFixed(3)}%`
+    },
+    dataZoom: [{type:'inside'},{type:'slider',height:20,bottom:0,borderColor:'#333',handleStyle:{color:'#444'},textStyle:{color:'#888'}}],
+    grid: { top:10, bottom:50, left:10, right:10, containLabel:true },
+    xAxis: { type:'category', data:data.map(r=>r.name), axisLabel:{rotate:40, color:'#888', fontFamily:'Courier New', fontSize:9}, axisLine:{lineStyle:{color:'#333'}} },
+    yAxis: { type:'value', axisLabel:{color:'#888', fontFamily:'Courier New', fontSize:9, formatter:v=>`₹${(v/100000).toFixed(1)}L`}, splitLine:{lineStyle:{color:'#1a1a1a'}} },
+    series: [{
+      type:'bar', data:data.map(r=>r.aum),
+      itemStyle:{color:(p)=>AMC_PALETTE[p.dataIndex % AMC_PALETTE.length]},
+    }]
+  }));
+}
+
+function renderConcDonut() {
+  const c = mkChart('chart-conc-donut');
+  if (!c) return;
+  const t3 = RANKINGS.slice(0,3).reduce((s,r)=>s+r.aum,0);
+  const t5 = RANKINGS.slice(3,5).reduce((s,r)=>s+r.aum,0);
+  const t10= RANKINGS.slice(5,10).reduce((s,r)=>s+r.aum,0);
+  const rest= RANKINGS.slice(10).reduce((s,r)=>s+r.aum,0);
+  c.setOption(applyTheme({
+    tooltip: { ...BLOOMBERG_THEME.tooltip, formatter:p=>`${p.name}: ₹${(p.value/100000).toFixed(1)} L Cr (${p.percent.toFixed(1)}%)`},
+    legend:{show:false},
+    series:[{
+      type:'pie', radius:['45%','80%'], center:['50%','50%'],
+      label:{formatter:'{b}\n{d}%', color:'#888', fontFamily:'Courier New', fontSize:9},
+      labelLine:{lineStyle:{color:'#333'}},
+      data:[
+        {name:'Top 3',  value:t3,   itemStyle:{color:'#FFB000'}},
+        {name:'#4–5',   value:t5,   itemStyle:{color:'#00CCCC'}},
+        {name:'#6–10',  value:t10,  itemStyle:{color:'#4488FF'}},
+        {name:'Rest 41',value:rest, itemStyle:{color:'#1a1a1a'}},
+      ]
+    }]
+  }));
+}
+
+function renderHistList(key, elId, path) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = HIST_FILES[key].map(f =>
+    `<div style="display:flex; justify-content:space-between; padding:2px 4px; border-bottom:1px solid #111; font-family:var(--font-mono); font-size:9px; color:var(--term-grey);">
+      <span>${f}</span>
+      <span style="color:var(--term-amber); cursor:pointer;" onclick="alert('File: ${path}${f}\\nOpen from project directory.')">↗</span>
+    </div>`
+  ).join('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   MARKET SHARE
+   ═══════════════════════════════════════════════════════ */
+let msView = 'treemap';
+let msCharts = {};
+
+function initMktShareCharts() {
+  renderMsTable(RANKINGS);
+  renderMsTreemap();
+}
+
+function msSetView(v) {
+  msView = v;
+  ['treemap','bar','pie'].forEach(x => {
+    document.getElementById('ms-view-'+x).classList.toggle('active', v===x);
+    const el = document.getElementById('ms-'+x+'-view');
+    if (el) el.style.display = v===x ? '' : 'none';
+  });
+  if (v==='treemap' && !msCharts.treemap) renderMsTreemap();
+  if (v==='bar'     && !msCharts.bar)     renderMsBar();
+  if (v==='pie'     && !msCharts.pie)     renderMsPie();
+}
+
+function renderMsTreemap() {
+  const c = mkChart('ms-treemap-view');
+  if (!c) return;
+  msCharts.treemap = c;
+  c.setOption(applyTheme({
+    tooltip: { ...BLOOMBERG_THEME.tooltip,
+      formatter:p=>`<b style="color:#FFB000">${p.name}</b><br/>AUM: ₹${(p.value/100000).toFixed(2)} L Cr<br/>Share: ${p.data.share ? p.data.share.toFixed(3)+'%' : ''}`
+    },
+    series:[{
+      type:'treemap',
+      data: RANKINGS.map((r,i)=>({
+        name:r.name, value:r.aum, share:r.share,
+        itemStyle:{color:AMC_PALETTE[i % AMC_PALETTE.length], borderColor:'#000', borderWidth:1},
+        label:{show:true, color:'#000', fontFamily:'Courier New', fontSize:9, fontWeight:'bold',
+          formatter: p => p.data.value > 50000 ? `${p.name}\n${p.data.share.toFixed(1)}%` : p.name.slice(0,6)}
+      })),
+      roam:true,
+      leafDepth:1,
+      breadcrumb:{show:false},
+    }]
+  }));
+}
+
+function renderMsBar() {
+  const c = mkChart('ms-bar-view');
+  if (!c) return;
+  msCharts.bar = c;
+  c.setOption(applyTheme({
+    tooltip: { ...BLOOMBERG_THEME.tooltip,
+      formatter: p=>`<b style="color:#FFB000">${p.name}</b><br/>Share: ${RANKINGS[p.dataIndex].share.toFixed(3)}%<br/>AUM: ₹${(RANKINGS[p.dataIndex].aum/100000).toFixed(2)} L Cr`
+    },
+    dataZoom:[{type:'inside'},{type:'slider',height:16,bottom:0,borderColor:'#333',textStyle:{color:'#888'}}],
+    grid:{top:10,bottom:40,left:10,right:10,containLabel:true},
+    xAxis:{type:'category',data:RANKINGS.map(r=>r.name),axisLabel:{rotate:45,color:'#888',fontFamily:'Courier New',fontSize:9},axisLine:{lineStyle:{color:'#333'}}},
+    yAxis:{type:'value',axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:v=>v.toFixed(1)+'%'},splitLine:{lineStyle:{color:'#1a1a1a'}}},
+    series:[{type:'bar',data:RANKINGS.map(r=>r.share),itemStyle:{color:p=>AMC_PALETTE[p.dataIndex%AMC_PALETTE.length]}}]
+  }));
+}
+
+function renderMsPie() {
+  const c = mkChart('ms-pie-view');
+  if (!c) return;
+  msCharts.pie = c;
+  const restShare = RANKINGS.slice(10).reduce((s,r)=>s+r.share,0);
+  c.setOption(applyTheme({
+    tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`<b style="color:#FFB000">${p.name}</b><br/>Share: ${p.percent.toFixed(2)}%`},
+    legend:{show:false},
+    series:[{
+      type:'pie', radius:['30%','70%'], center:['50%','50%'],
+      label:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:'{b}\n{d}%'},
+      labelLine:{lineStyle:{color:'#333'}},
+      data:[
+        ...RANKINGS.slice(0,10).map((r,i)=>({name:r.name,value:r.share,itemStyle:{color:AMC_PALETTE[i]}})),
+        {name:'Rest 41',value:restShare,itemStyle:{color:'#1a1a1a'}},
+      ]
+    }]
+  }));
+}
+
+function renderMsTable(data) {
+  const maxAum = RANKINGS[0].aum;
+  document.getElementById('msTableBody').innerHTML = data.map(r => {
+    const barW = Math.round((r.aum/maxAum)*60);
+    return `<tr>
+      <td class="td-rank">${r.rank}</td>
+      <td class="td-name">${r.name}</td>
+      <td class="td-num">${r.aum.toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+      <td class="td-pct" style="color:var(--term-white); text-align:right;">${r.share.toFixed(3)}%</td>
+      <td style="text-align:right;">
+        <div class="td-bar-wrap">
+          <span class="td-bar" style="width:${barW}px; background:${AMC_PALETTE[r.rank-1 % AMC_PALETTE.length]};"></span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterMarketShare() {
+  const q = document.getElementById('msSearch').value.toLowerCase();
+  renderMsTable(RANKINGS.filter(r=>r.name.toLowerCase().includes(q)));
+}
+
+/* ═══════════════════════════════════════════════════════
+   REVENUE
+   ═══════════════════════════════════════════════════════ */
+function initRevenueCharts() {
+  renderRevTable();
+  renderRevWaterfall();
+  renderRevScatter();
+  renderRevPie();
+  renderHistList('revenue','hist-revenue-list','data/exports/revenue/');
+}
+
+function revSetView(v) {
+  document.getElementById('rev-view-chart').classList.toggle('active', v==='chart');
+  document.getElementById('rev-view-table').classList.toggle('active', v==='table');
+  document.getElementById('rev-chart-view').style.display = v==='chart' ? '' : 'none';
+  document.getElementById('rev-table-view').style.display = v==='table' ? '' : 'none';
+}
+
+function renderRevTable() {
+  document.getElementById('revTableBody').innerHTML = REVENUE.map(r =>
+    `<tr>
+      <td class="td-rank">${r.rank}</td>
+      <td class="td-name">${r.name}</td>
+      <td class="td-num">${r.aum.toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+      <td style="text-align:right; color:var(--term-grey);">${(r.yield_pct).toFixed(2)}%</td>
+      <td class="td-num" style="color:var(--term-green);">${r.rev.toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+    </tr>`
+  ).join('');
+}
+
+function renderRevWaterfall() {
+  const c = mkChart('chart-rev-waterfall');
+  if (!c) return;
+  const top20 = REVENUE.slice(0,20);
+  c.setOption(applyTheme({
+    tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`<b style="color:#FFB000">${p.name}</b><br/>Revenue: ₹${p.value.toFixed(0)} Cr`},
+    grid:{top:10,bottom:60,left:10,right:10,containLabel:true},
+    xAxis:{type:'category',data:top20.map(r=>r.name),axisLabel:{rotate:40,color:'#888',fontFamily:'Courier New',fontSize:9},axisLine:{lineStyle:{color:'#333'}}},
+    yAxis:{type:'value',axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:v=>`₹${v.toFixed(0)}Cr`},splitLine:{lineStyle:{color:'#1a1a1a'}}},
+    series:[{
+      type:'bar', data:top20.map(r=>r.rev),
+      itemStyle:{color:p=>{const v=p.value; return v>5000?'#FFB000':v>2000?'#00CCCC':v>1000?'#4488FF':'#00CC44';}},
+      label:{show:true,position:'top',color:'#888',fontFamily:'Courier New',fontSize:8,formatter:p=>`₹${p.value.toFixed(0)}`}
+    }]
+  }));
+}
+
+function renderRevScatter() {
+  const c = mkChart('chart-rev-scatter');
+  if (!c) return;
+  const top15 = REVENUE.slice(0,15);
+  c.setOption(applyTheme({
+    tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`<b style="color:#FFB000">${top15[p.dataIndex].name}</b><br/>AUM: ₹${(p.value[0]/100000).toFixed(2)} L Cr<br/>Revenue: ₹${p.value[1].toFixed(0)} Cr`},
+    grid:{top:10,bottom:30,left:10,right:10,containLabel:true},
+    xAxis:{type:'value',name:'AUM (₹ Cr)',nameTextStyle:{color:'#888',fontSize:9},axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:v=>`${(v/100000).toFixed(0)}L`},splitLine:{lineStyle:{color:'#1a1a1a'}}},
+    yAxis:{type:'value',name:'Revenue (₹ Cr)',nameTextStyle:{color:'#888',fontSize:9},axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9},splitLine:{lineStyle:{color:'#1a1a1a'}}},
+    series:[{
+      type:'scatter',
+      data:top15.map(r=>[r.aum,r.rev]),
+      symbolSize:10,
+      itemStyle:{color:p=>AMC_PALETTE[p.dataIndex%AMC_PALETTE.length]},
+      label:{show:true,position:'right',formatter:p=>top15[p.dataIndex].name,color:'#888',fontFamily:'Courier New',fontSize:8}
+    }]
+  }));
+}
+
+function renderRevPie() {
+  const c = mkChart('chart-rev-pie');
+  if (!c) return;
+  const top5rev = REVENUE.slice(0,5).reduce((s,r)=>s+r.rev,0);
+  const restRev = REVENUE.slice(5).reduce((s,r)=>s+r.rev,0);
+  c.setOption(applyTheme({
+    tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`${p.name}: ₹${p.value.toFixed(0)} Cr (${p.percent.toFixed(1)}%)`},
+    legend:{show:false},
+    series:[{
+      type:'pie',radius:['40%','80%'],center:['50%','50%'],
+      label:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:'{b}\n{d}%'},
+      labelLine:{lineStyle:{color:'#333'}},
+      data:[
+        ...REVENUE.slice(0,5).map((r,i)=>({name:r.name,value:r.rev,itemStyle:{color:AMC_PALETTE[i]}})),
+        {name:'Rest 46',value:restRev,itemStyle:{color:'#1a1a1a'}},
+      ]
+    }]
+  }));
+}
+
+/* ═══════════════════════════════════════════════════════
+   FORECAST
+   ═══════════════════════════════════════════════════════ */
+function initForecastCharts() {
+  renderFcIndustryAum();
+  renderFcIndustryRev();
+  populateFcAmcSelect();
+  renderAmcForecast();
+  renderHistList('forecast','hist-forecast-list','data/exports/forecasting/');
+}
+
+function renderFcIndustryAum() {
+  const c = mkChart('chart-fc-industry-aum');
+  if (!c) return;
+  const labels = ['Current','FY+1','FY+2','FY+3'];
+  const base = [INDUSTRY_FORECAST_AUM.base.cur,INDUSTRY_FORECAST_AUM.base.y1,INDUSTRY_FORECAST_AUM.base.y2,INDUSTRY_FORECAST_AUM.base.y3];
+  const bull = [INDUSTRY_FORECAST_AUM.bull.cur,INDUSTRY_FORECAST_AUM.bull.y1,INDUSTRY_FORECAST_AUM.bull.y2,INDUSTRY_FORECAST_AUM.bull.y3];
+  const bear = [INDUSTRY_FORECAST_AUM.bear.cur,INDUSTRY_FORECAST_AUM.bear.y1,INDUSTRY_FORECAST_AUM.bear.y2,INDUSTRY_FORECAST_AUM.bear.y3];
+  c.setOption(applyTheme({
+    tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`${p.seriesName}<br/>${p.name}: ₹${p.value.toFixed(2)} L Cr`},
+    legend:{data:['Base Case','Bull Case','Bear Case'],textStyle:{color:'#888',fontFamily:'Courier New',fontSize:9},bottom:0},
+    grid:{top:10,bottom:40,left:10,right:10,containLabel:true},
+    xAxis:{type:'category',data:labels,axisLine:{lineStyle:{color:'#333'}},axisLabel:{color:'#888',fontFamily:'Courier New'}},
+    yAxis:{type:'value',min:70,axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:v=>`₹${v}L`},splitLine:{lineStyle:{color:'#1a1a1a'}}},
+    series:[
+      {name:'Base Case',type:'line',data:base,lineStyle:{color:'#00CCCC',width:2},itemStyle:{color:'#00CCCC'},symbol:'circle',symbolSize:6,
+       areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,204,204,0.2)'},{offset:1,color:'rgba(0,204,204,0)'}]}}},
+      {name:'Bull Case',type:'line',data:bull,lineStyle:{color:'#00CC44',width:2,type:'dashed'},itemStyle:{color:'#00CC44'},symbol:'circle',symbolSize:6},
+      {name:'Bear Case',type:'line',data:bear,lineStyle:{color:'#FF3333',width:2,type:'dashed'},itemStyle:{color:'#FF3333'},symbol:'circle',symbolSize:6},
+    ]
+  }));
+}
+
+function renderFcIndustryRev() {
+  const c = mkChart('chart-fc-industry-rev');
+  if (!c) return;
+  const labels = ['Current','FY+1','FY+2','FY+3'];
+  c.setOption(applyTheme({
+    tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`${p.seriesName}<br/>${p.name}: ₹${p.value.toFixed(0)} Cr`},
+    legend:{data:['Base Case','Bull Case','Bear Case'],textStyle:{color:'#888',fontFamily:'Courier New',fontSize:9},bottom:0},
+    grid:{top:10,bottom:40,left:10,right:10,containLabel:true},
+    xAxis:{type:'category',data:labels,axisLine:{lineStyle:{color:'#333'}},axisLabel:{color:'#888',fontFamily:'Courier New'}},
+    yAxis:{type:'value',axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:v=>`₹${(v/1000).toFixed(0)}K`},splitLine:{lineStyle:{color:'#1a1a1a'}}},
+    series:[
+      {name:'Base Case',type:'bar',data:[INDUSTRY_FORECAST_REV.base.cur,INDUSTRY_FORECAST_REV.base.y1,INDUSTRY_FORECAST_REV.base.y2,INDUSTRY_FORECAST_REV.base.y3],itemStyle:{color:'#00CCCC'}},
+      {name:'Bull Case',type:'bar',data:[INDUSTRY_FORECAST_REV.bull.cur,INDUSTRY_FORECAST_REV.bull.y1,INDUSTRY_FORECAST_REV.bull.y2,INDUSTRY_FORECAST_REV.bull.y3],itemStyle:{color:'#00CC44'}},
+      {name:'Bear Case',type:'bar',data:[INDUSTRY_FORECAST_REV.bear.cur,INDUSTRY_FORECAST_REV.bear.y1,INDUSTRY_FORECAST_REV.bear.y2,INDUSTRY_FORECAST_REV.bear.y3],itemStyle:{color:'#FF3333'}},
+    ]
+  }));
+}
+
+function populateFcAmcSelect() {
+  const sel = document.getElementById('fcAmcSelect');
+  Object.keys(FORECAST_AUM).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    sel.appendChild(opt);
+  });
+}
+
+function renderAmcForecast() {
+  const name = document.getElementById('fcAmcSelect').value;
+  const fd = FORECAST_AUM[name];
+  const fr = FORECAST_REV[name];
+  if (!fd) return;
+
+  // Table
+  const labels = ['Current','FY+1','FY+2','FY+3'];
+  document.getElementById('fc-amc-detail-body').innerHTML = [
+    {sc:'Base Case', d:fd.base, cls:'text-cyan'},
+    {sc:'Bull Case', d:fd.bull, cls:'text-green'},
+    {sc:'Bear Case', d:fd.bear, cls:'text-red'},
+  ].map(r => `<tr>
+    <td class="${r.cls}">${r.sc}</td>
+    ${r.d.map(v=>`<td class="td-num">₹${v.toLocaleString('en-IN',{maximumFractionDigits:0})}</td>`).join('')}
+  </tr>`).join('');
+
+  // AUM chart
+  const c1 = mkChart('chart-fc-amc-aum');
+  if (c1) {
+    c1.setOption(applyTheme({
+      tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`${p.seriesName}<br/>${p.name}: ₹${p.value.toLocaleString('en-IN')} Cr`},
+      legend:{data:['Base','Bull','Bear'],textStyle:{color:'#888',fontFamily:'Courier New',fontSize:9},bottom:0},
+      grid:{top:10,bottom:40,left:10,right:10,containLabel:true},
+      xAxis:{type:'category',data:labels,axisLine:{lineStyle:{color:'#333'}},axisLabel:{color:'#888',fontFamily:'Courier New'}},
+      yAxis:{type:'value',axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:v=>`₹${(v/1000).toFixed(0)}K`},splitLine:{lineStyle:{color:'#1a1a1a'}}},
+      series:[
+        {name:'Base',type:'line',data:fd.base,lineStyle:{color:'#00CCCC',width:2},itemStyle:{color:'#00CCCC'},symbol:'circle',
+         areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(0,204,204,0.15)'},{offset:1,color:'rgba(0,0,0,0)'}]}}},
+        {name:'Bull',type:'line',data:fd.bull,lineStyle:{color:'#00CC44',width:1.5,type:'dashed'},itemStyle:{color:'#00CC44'},symbol:'diamond'},
+        {name:'Bear',type:'line',data:fd.bear,lineStyle:{color:'#FF3333',width:1.5,type:'dashed'},itemStyle:{color:'#FF3333'},symbol:'diamond'},
+      ]
+    }));
+  }
+
+  // Revenue chart
+  if (fr) {
+    const c2 = mkChart('chart-fc-amc-rev');
+    if (c2) {
+      c2.setOption(applyTheme({
+        tooltip:{...BLOOMBERG_THEME.tooltip,formatter:p=>`${p.seriesName}: ₹${p.value.toFixed(2)} Cr`},
+        legend:{data:['Base','Bull','Bear'],textStyle:{color:'#888',fontFamily:'Courier New',fontSize:9},bottom:0},
+        grid:{top:10,bottom:40,left:10,right:10,containLabel:true},
+        xAxis:{type:'category',data:labels,axisLine:{lineStyle:{color:'#333'}},axisLabel:{color:'#888',fontFamily:'Courier New'}},
+        yAxis:{type:'value',axisLabel:{color:'#888',fontFamily:'Courier New',fontSize:9,formatter:v=>`₹${v.toFixed(0)}`},splitLine:{lineStyle:{color:'#1a1a1a'}}},
+        series:[
+          {name:'Base',type:'bar',data:fr.base,itemStyle:{color:'#00CCCC'}},
+          {name:'Bull',type:'bar',data:fr.bull,itemStyle:{color:'#00CC44'}},
+          {name:'Bear',type:'bar',data:fr.bear,itemStyle:{color:'#FF3333'}},
+        ]
+      }));
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   EXPLORER
+   ═══════════════════════════════════════════════════════ */
+let expDs = 'nav';
+let expFilteredData = [];
+
+function initExplorer() {
+  expSetDs('nav');
+}
+
+function expSetDs(ds) {
+  expDs = ds;
+  document.querySelectorAll('.explorer-ds-btn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('exp-btn-'+ds);
+  if (btn) btn.classList.add('active');
+  renderExplorer(ds);
+}
+
+function renderExplorer(ds) {
+  const title = document.getElementById('exp-title');
+  const tag   = document.getElementById('exp-tag');
+  const content = document.getElementById('exp-content');
+  const searchRow = document.getElementById('exp-search-row');
+
+  if (ds === 'nav') {
+    title.textContent = '▌ NAV Snapshot — 12 Jun 2026';
+    tag.textContent = '14,212 RECORDS (SHOWING SAMPLE)';
+    searchRow.style.display = '';
+    expFilteredData = NAV_DATA;
+    renderNavTable(NAV_DATA);
+  } else if (ds === 'ter') {
+    title.textContent = '▌ Expense Ratios (TER) — Jun 2026';
+    tag.textContent = 'REGULAR & DIRECT';
+    searchRow.style.display = '';
+    expFilteredData = TER_DATA;
+    renderTerTable(TER_DATA);
+  } else if (ds === 'aum') {
+    title.textContent = '▌ AUM (Processed) — Jan–Mar 2026';
+    tag.textContent = '51 AMCs';
+    searchRow.style.display = '';
+    expFilteredData = AUM_DATA;
+    renderAumTable(AUM_DATA);
+  } else if (ds.startsWith('hist-')) {
+    searchRow.style.display = 'none';
+    const map = {
+      'hist-rankings': {t:'Rankings', path:'data/exports/rankings/', key:'rankings'},
+      'hist-mshare':   {t:'Market Share', path:'data/exports/market_share/', key:'market_share'},
+      'hist-rev':      {t:'Revenue', path:'data/exports/revenue/', key:'revenue'},
+      'hist-fc':       {t:'Forecast', path:'data/exports/forecasting/', key:'forecast'},
+    };
+    const m = map[ds];
+    title.textContent = `▌ ${m.t} — Historical Files`;
+    tag.textContent = `${HIST_FILES[m.key].length} FILES`;
+    content.innerHTML = `
+      <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:8px; padding:4px; border:1px solid #222; background:#050505;">
+        PATH: ${m.path}<br/>All files generated by pipeline runs. Click ↗ to navigate to file location.
+      </div>
+      ${HIST_FILES[m.key].map(f=>`
+        <div class="nav-result-row" style="cursor:default;">
+          <span class="nav-name">${f}</span>
+          <span class="nav-date">${extractTimestamp(f)}</span>
+          <span class="nav-val" style="cursor:pointer; color:var(--term-amber);" onclick="alert('File: ${m.path}${f}')">↗ Open</span>
+        </div>
+      `).join('')}
+    `;
+  }
+}
+
+function extractTimestamp(filename) {
+  const m = filename.match(/(\d{8})_?(\d{6})?/);
+  if (!m) return '';
+  const d = m[1];
+  const t = m[2] || '';
+  return `${d.slice(6)}.${d.slice(4,6)}.${d.slice(0,4)}${t ? ' '+t.slice(0,2)+':'+t.slice(2,4) : ''}`;
+}
+
+function renderNavTable(data) {
+  document.getElementById('exp-content').innerHTML = `
+    <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">
+      Showing ${data.length} of 14,212 schemes. Full data in nav_snapshot_20260615_182120.csv
+    </div>
+    <table class="data-table">
+      <thead><tr>
+        <th>Code</th><th>Scheme Name</th><th>NAV Date</th><th style="text-align:right;">NAV (₹)</th><th>ISIN</th>
+      </tr></thead>
+      <tbody>
+        ${data.map(r=>`<tr>
+          <td style="color:var(--term-grey); font-size:9px;">${r.code}</td>
+          <td class="td-name" style="font-size:10px;">${r.name}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.date}</td>
+          <td class="td-num">₹${r.nav.toFixed(2)}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.isin}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderTerTable(data) {
+  document.getElementById('exp-content').innerHTML = `
+    <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">
+      Showing ${data.length} schemes. Full TER data in expense_ratio_clean_June_2026_20260615_182117.csv
+    </div>
+    <table class="data-table">
+      <thead><tr>
+        <th>Scheme</th><th>Category</th><th>Date</th>
+        <th style="text-align:right;">Regular TER%</th><th style="text-align:right;">Direct TER%</th>
+      </tr></thead>
+      <tbody>
+        ${data.map(r=>`<tr>
+          <td class="td-name" style="font-size:10px;">${r.name}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.cat}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.date}</td>
+          <td style="text-align:right; color:var(--term-amber);">${r.reg.toFixed(2)}%</td>
+          <td style="text-align:right; color:var(--term-green);">${r.dir.toFixed(2)}%</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderAumTable(data) {
+  document.getElementById('exp-content').innerHTML = `
+    <div style="font-family:var(--font-mono); font-size:9px; color:var(--term-grey); margin-bottom:4px;">
+      ${data.length} AMCs | Period: January - March 2026 | Source: aum_clean_January_March_2026_20260615_182034.csv
+    </div>
+    <table class="data-table">
+      <thead><tr>
+        <th>AMC Name</th><th>Period</th><th style="text-align:right;">AUM (₹ Cr)</th><th style="text-align:right;">AUM (₹ L Cr)</th>
+      </tr></thead>
+      <tbody>
+        ${[...data].sort((a,b)=>b.aum-a.aum).map(r=>`<tr>
+          <td class="td-name">${r.name}</td>
+          <td style="color:var(--term-grey); font-size:9px;">${r.month}</td>
+          <td class="td-num">${r.aum.toLocaleString('en-IN',{maximumFractionDigits:0})}</td>
+          <td class="td-num" style="color:var(--term-amber);">${(r.aum/100000).toFixed(4)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function filterExplorer() {
+  const q = document.getElementById('expSearch').value.toLowerCase();
+  if (expDs === 'nav')
+    renderNavTable(NAV_DATA.filter(r=>r.name.toLowerCase().includes(q)||r.code.includes(q)||r.isin.toLowerCase().includes(q)));
+  else if (expDs === 'ter')
+    renderTerTable(TER_DATA.filter(r=>r.name.toLowerCase().includes(q)||r.cat.toLowerCase().includes(q)));
+  else if (expDs === 'aum')
+    renderAumTable(AUM_DATA.filter(r=>r.name.toLowerCase().includes(q)));
+}
+
+/* ═══════════════════════════════════════════════════════
+   DOWNLOAD CSV
+   ═══════════════════════════════════════════════════════ */
+function downloadCSV(type) {
+  let rows, filename, headers;
+  if (type === 'rankings') {
+    headers = ['rank','amc_name','average_aum_cr','market_share_pct','period_start','period_end'];
+    rows = RANKINGS.map(r=>[r.rank,r.name,r.aum.toFixed(6),r.share.toFixed(6),'2026-01-01','2026-03-31']);
+    filename = 'amc_rankings_latest.csv';
+  } else if (type === 'revenue') {
+    headers = ['rank','amc_name','aum_cr','yield_pct','estimated_revenue_cr','report_date'];
+    rows = REVENUE.map(r=>[r.rank,r.name,r.aum.toFixed(2),r.yield_pct.toFixed(4),r.rev.toFixed(2),'2026-03-31']);
+    filename = 'amc_revenue_latest.csv';
+  } else if (type === 'market_share') {
+    headers = ['rank','amc_name','average_aum_cr','market_share_pct','period_start','period_end'];
+    rows = RANKINGS.map(r=>[r.rank,r.name,r.aum.toFixed(6),r.share.toFixed(6),'2026-01-01','2026-03-31']);
+    filename = 'market_share_latest.csv';
+  }
+  const csv = [headers.join(','), ...rows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function expDownload() {
+  downloadCSV(expDs === 'nav' ? 'rankings' : expDs === 'ter' ? 'revenue' : 'market_share');
+}
+
+/* ═══════════════════════════════════════════════════════
+   FULLSCREEN
+   ═══════════════════════════════════════════════════════ */
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen().catch(()=>{});
+}
+
+/* ═══════════════════════════════════════════════════════
+   KEYBOARD
+   ═══════════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  const map = {F1:'overview',F2:'rankings',F3:'market_share',F4:'revenue',F5:'forecast',F6:'explorer'};
+  if (map[e.key]) { e.preventDefault(); switchTab(map[e.key]); }
+  if (e.key==='F11') { e.preventDefault(); toggleFullscreen(); }
+});
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════ */
+initTabCharts('overview');
+chartsInit['overview'] = true;
+</script>
+</body>
+</html>
