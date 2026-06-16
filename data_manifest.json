@@ -1,0 +1,80 @@
+{
+  "latest": {
+    "rankings": "data/exports/rankings/amc_rankings_latest.csv",
+    "market_share": "data/exports/market_share/market_share_latest.csv",
+    "revenue": "data/exports/revenue/amc_revenue_latest.csv",
+    "forecast": "data/exports/forecasting/forecast_aum_latest.csv"
+  },
+  "historical_files": {
+    "rankings": [
+      "amc_rankings_20260613_125917.csv",
+      "amc_rankings_20260615_130914.csv",
+      "amc_rankings_20260615_131238.csv",
+      "amc_rankings_20260615_131439.csv",
+      "amc_rankings_20260615_132735.csv",
+      "amc_rankings_20260615_133518.csv",
+      "amc_rankings_20260615_134230.csv",
+      "amc_rankings_20260615_134729.csv",
+      "amc_rankings_20260615_182153.csv",
+      "amc_rankings_20260616_225652.csv",
+      "amc_rankings_latest.csv",
+      "top_10_amcs_20260613_125917.csv",
+      "top_10_amcs_20260615_130914.csv",
+      "top_10_amcs_20260615_131238.csv",
+      "top_10_amcs_20260615_131439.csv",
+      "top_10_amcs_20260615_132735.csv",
+      "top_10_amcs_20260615_133518.csv",
+      "top_10_amcs_20260615_134230.csv",
+      "top_10_amcs_20260615_134729.csv",
+      "top_10_amcs_20260615_182153.csv",
+      "top_10_amcs_20260616_225652.csv",
+      "top_10_amcs_latest.csv"
+    ],
+    "market_share": [
+      "market_share_20260613_125233.csv",
+      "market_share_20260615_130913.csv",
+      "market_share_20260615_131438.csv",
+      "market_share_20260615_132734.csv",
+      "market_share_20260615_134230.csv",
+      "market_share_20260615_134729.csv",
+      "market_share_20260615_182152.csv",
+      "market_share_20260616_225651.csv",
+      "market_share_latest.csv"
+    ],
+    "revenue": [
+      "amc_revenue_20260614_184539.csv",
+      "amc_revenue_20260615_134231.csv",
+      "amc_revenue_20260615_134730.csv",
+      "amc_revenue_20260615_182153.csv",
+      "amc_revenue_20260616_225653.csv",
+      "amc_revenue_latest.csv",
+      "revenue_validation_20260614_185111.csv",
+      "revenue_validation_20260614_185343.csv",
+      "revenue_validation_20260614_185608.csv",
+      "revenue_validation_20260615_134231.csv",
+      "revenue_validation_20260615_134730.csv",
+      "revenue_validation_20260615_182154.csv",
+      "revenue_validation_20260616_225653.csv",
+      "revenue_validation_latest.csv"
+    ],
+    "forecast": [
+      "forecast_aum_20260615_114330.csv",
+      "forecast_aum_20260615_134232.csv",
+      "forecast_aum_20260615_134731.csv",
+      "forecast_aum_20260615_182154.csv",
+      "forecast_aum_20260616_225654.csv",
+      "forecast_aum_latest.csv",
+      "forecast_revenue_20260615_114718.csv",
+      "forecast_revenue_20260615_134232.csv",
+      "forecast_revenue_20260615_134731.csv",
+      "forecast_revenue_20260615_182155.csv",
+      "forecast_revenue_20260616_225654.csv",
+      "forecast_revenue_latest.csv"
+    ]
+  },
+  "metadata": {
+    "last_run": "16 Jun 2026 22:57:02 IST",
+    "amc_count": 51,
+    "scheme_count": 14213
+  }
+}
