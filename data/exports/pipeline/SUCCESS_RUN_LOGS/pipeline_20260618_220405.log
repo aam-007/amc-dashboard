@@ -1,0 +1,896 @@
+========================================================================
+AMC DASHBOARD PIPELINE — RUN LOG
+========================================================================
+Pipeline Status : COMPLETED
+Started         : 2026-06-18 22:04:05
+Ended           : 2026-06-18 22:06:26
+Total Runtime   : 00:02:21
+Stages Executed : 12
+Stages Passed   : 12
+Stages Failed   : 0
+
+========================================================================
+STAGE 01 — AUM INGESTION
+Status   : PASSED
+Script   : 01-data-ingestion/aum/amfi_aum.py
+Started  : 22:04:05
+Ended    : 22:04:46
+Duration : 00:00:41
+
+── STDOUT ──
+
+══════════════════════════════════════════════════════════
+  AMFI AUM Ingestion Pipeline
+══════════════════════════════════════════════════════════
+
+  [downloader] Opening https://www.amfiindia.com/aum-data/average-aum …
+  [downloader] Applying filters …
+  [downloader] Latest FY     : April 2025 - March 2026
+  [downloader] Latest period : January - March 2026
+  [downloader] Clicking GO …
+  [downloader] Downloading Excel …
+  [downloader] Saved raw file : C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\raw\aum\amfi_aum_January_March_2026_20260618_220444.xlsx
+
+[Stage 3] Loading raw Excel …
+  [loader]     Raw shape     : (8685, 4)
+
+[Stage 4] Extracting AMC total rows …
+  [extractor]  Raw extracted rows (pre-cleaning): 51
+
+[Stage 5] Cleaning & normalising …
+  [cleaner]    Final AMC rows (post-cleaning): 51
+
+[Stage 6] Validating …
+  [validator]  All checks passed (51 AMCs).
+
+══════════════════════════════════════════════════════════
+  Period        : January - March 2026
+  AMCs          : 51
+  Industry AUM  : ₹8,153,966 Cr
+  Raw Excel     : C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\raw\aum\amfi_aum_January_March_2026_20260618_220444.xlsx
+  Clean CSV     : C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\processed\aum\aum_clean_January_March_2026_20260618_220446.csv
+══════════════════════════════════════════════════════════
+
+Top-10 AMCs by AUM (₹ Cr):
+
+                 AMC Name    AUM (₹ Cr)
+1                     SBI  1,248,003.01
+2        ICICI Prudential  1,103,751.32
+3                    HDFC    927,451.27
+4            Nippon India    724,965.14
+5          Kotak Mahindra    580,950.24
+6   Aditya Birla Sun Life    435,865.96
+7                     UTI    388,469.81
+8                    Axis    359,601.25
+9                    Tata    227,511.98
+10                    DSP    225,399.63
+
+
+── STDERR ──
+(no output)
+
+========================================================================
+STAGE 02 — EXPENSE RATIO INGESTION
+Status   : PASSED
+Script   : 01-data-ingestion/expense_ratio/amfi_amc_expense_ratio.py
+Started  : 22:04:46
+Ended    : 22:05:33
+Duration : 00:00:47
+
+── STDOUT ──
+╔══════════════════════════════════════════════════════╗
+║   AMFI TER Ingestion Pipeline — starting             ║
+╚══════════════════════════════════════════════════════╝
+
+[runner] Stage 2 — Downloading TER Excel …
+[downloader] Download directory: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\raw\expense_ratio
+[downloader] Launching Chromium in headless mode …
+[downloader] Navigating to https://www.amfiindia.com/ter-of-mf-schemes …
+[downloader] Page loaded, network idle.
+[downloader] Initial MuiAutocomplete dropdowns found: 5
+[downloader] Starting filter selection …
+    [dropdown 0] selecting first option for 'Financial Year' …
+    [dropdown 0] waiting for listbox options to appear …
+    [dropdown 0] clicking option: '2026-2027'
+    [dropdown 0] selected: '2026-2027'
+    [dropdown 1] selecting first option for 'Month' …
+    [dropdown 1] waiting for listbox options to appear …
+    [dropdown 1] clicking option: 'June-2026'
+    [dropdown 1] selected: 'June-2026'
+    [dropdown 2] selecting first option for 'Fund Type' …
+    [dropdown 2] waiting for listbox options to appear …
+    [dropdown 2] clicking option: 'All'
+    [dropdown 2] selected: 'All'
+[downloader] Checking for Sub Category dropdown …
+[downloader] Dropdowns after Fund Type: 6
+[downloader] Sub Category dropdown appeared (dynamic).
+    [dropdown 3] selecting first option for 'Category' …
+    [dropdown 3] waiting for listbox options to appear …
+    [dropdown 3] clicking option: 'All'
+    [dropdown 3] selected: 'All'
+    [dropdown 4] selecting first option for 'Sub Category' …
+    [dropdown 4] waiting for listbox options to appear …
+    [dropdown 4] clicking option: 'All'
+    [dropdown 4] selected: 'All'
+    [dropdown 5] selecting first option for 'Mutual Fund' …
+    [dropdown 5] waiting for listbox options to appear …
+    [dropdown 5] clicking option: 'All'
+    [dropdown 5] selected: 'All'
+    waiting for GO button to become enabled …
+    GO button is now enabled.
+[downloader] Clicking GO button …
+[downloader] GO clicked, waiting for results …
+[downloader] Looking for 'Download Excel' button …
+[downloader] 'Download Excel' button found.
+[downloader] Triggering download …
+[downloader] Saving file to: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\raw\expense_ratio\amfi_expense_ratio_2026_2027_June_2026_20260618_220529.xlsx
+[downloader] Download complete: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\raw\expense_ratio\amfi_expense_ratio_2026_2027_June_2026_20260618_220529.xlsx
+[runner] Downloaded: data\raw\expense_ratio\amfi_expense_ratio_2026_2027_June_2026_20260618_220529.xlsx  |  period=June-2026  |  FY=2026-2027
+
+[runner] Stage 3 — Loading Excel …
+
+[loader] Reading Excel: data\raw\expense_ratio\amfi_expense_ratio_2026_2027_June_2026_20260618_220529.xlsx
+[loader] Loaded shape: 30,693 rows × 15 columns
+[loader] Columns: ['NSDL Scheme Code', 'Scheme Name', 'Scheme Type', 'Scheme Category', 'TER Date', 'Regular Plan - Base Expense Ratio (BER) (%)', 'Regular Plan - Brokerage cost (%)', 'Regular Plan - Transaction Cost incurred for the purpose of execution of trade (%)', 'Regular Plan - Statutory Levies (including GST) (%)', 'Regular Plan - Total TER (%)', 'Direct Plan - Base Expense Ratio (BER) (%)', 'Direct Plan - Brokerage cost (%)', 'Direct Plan - Transaction Cost incurred for the purpose of execution of trade (%)', 'Direct Plan - Statutory Levies (including GST) (%)', 'Direct Plan - Total TER (%)']
+
+[runner] Stage 4 — Normalising columns …
+
+[normalizer] Starting column normalisation …
+[normalizer] Renamed 7 columns.
+[normalizer] Retained 7 required columns: ['scheme_code', 'scheme_name', 'scheme_type', 'scheme_category', 'ter_date', 'regular_ter', 'direct_ter']
+[normalizer] Stripped whitespace from 7 string columns.
+[normalizer] Output shape: 30,693 rows × 7 columns
+
+[runner] Stage 5 — Cleaning data …
+
+[cleaner] Cleaning data for period: June-2026
+[cleaner] Dropping 13 rows with unparseable ter_date.
+[cleaner] ingested_at set to: 2026-06-18T16:35:33Z
+[cleaner] Rows: 30,693 → 30,680 (13 dropped total)
+
+[runner] Stage 6 — Validating data …
+
+[validator] Running validation checks …
+[validator] ✓ No null values in mandatory columns.
+[validator] ✓ No negative TER values.
+[validator] WARNING — 8 duplicate (scheme_code, ter_date) pairs detected. Downstream consumers should be aware.
+[validator] ✓ Row count 30,680 within expected range.
+[validator] Validation complete.
+
+[runner] Stage 7 — Writing processed CSV …
+[runner] Saved: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\processed\expense_ratio\expense_ratio_clean_June_2026_20260618_220533.csv
+
+════════════════════════════════════════════════════════════
+  AMFI TER INGESTION — RUN SUMMARY
+════════════════════════════════════════════════════════════
+  Period            : June-2026
+  Financial Year    : 2026-2027
+  Rows              : 30,680
+  Unique Schemes    : 1,888
+  Processed CSV     : C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\processed\expense_ratio\expense_ratio_clean_June_2026_20260618_220533.csv
+────────────────────────────────────────────────────────────
+  Top 10 Schemes by Average Regular TER
+────────────────────────────────────────────────────────────
+   1. THE WEALTH COMPANY LARGE & MID CAP FUND             9.6583%
+   2. Samco Multi Asset Allocation Fund                   5.9708%
+   3. Motilal Oswal Quant Fund                            5.3294%
+   4. CAPITALMIND FLEXI CAP FUND                          5.3200%
+   5. Axis Momentum Fund                                  5.3194%
+   6. Samco Mid Cap Fund                                  5.2546%
+   7. Samco Large & Mid Cap Fund                          4.9792%
+   8. Sundaram Multi-Factor Fund                          4.9641%
+   9. Samco Multi Cap Fund                                4.7646%
+  10. Samco Active Momentum Fund                          4.7638%
+════════════════════════════════════════════════════════════
+
+── STDERR ──
+C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\01-data-ingestion\expense_ratio\amfi_amc_expense_ratio.py:416: Pandas4Warning: For backward compatibility, 'str' dtypes are included by select_dtypes when 'object' dtype is specified. This behavior is deprecated and will be removed in a future version. Explicitly pass 'str' to `include` to select them, or to `exclude` to remove them and silence this warning.
+See https://pandas.pydata.org/docs/user_guide/migration-3-strings.html#string-migration-select-dtypes for details on how to write code that works with pandas 2 and 3.
+  str_cols = df.select_dtypes(include="object").columns
+
+========================================================================
+STAGE 03 — FUND MASTER INGESTION
+Status   : PASSED
+Script   : 01-data-ingestion/fund_master/amfi_fund_master.py
+Started  : 22:05:33
+Ended    : 22:05:35
+Duration : 00:00:01
+
+── STDOUT ──
+2026-06-18 22:05:34  INFO      ============================================================
+2026-06-18 22:05:34  INFO      AMFI Fund Master Ingestion Pipeline — started
+2026-06-18 22:05:34  INFO      ============================================================
+2026-06-18 22:05:34  INFO      Downloading NAVAll.txt (attempt 1/3) …
+2026-06-18 22:05:34  INFO      Download complete — 1603.81 KB received.
+2026-06-18 22:05:34  INFO      Raw file saved → data\raw\fund_master\NAVAll_20260618_220534.txt
+2026-06-18 22:05:35  INFO      Parsing complete — 14215 records extracted, 0 rows skipped.
+2026-06-18 22:05:35  INFO      Clean DataFrame — 14215 records, 10 columns.
+2026-06-18 22:05:35  INFO      Processed file saved → data\processed\fund_master\fund_master_20260618_220535.csv  (14215 rows × 10 cols)
+2026-06-18 22:05:35  INFO      ============================================================
+2026-06-18 22:05:35  INFO      Pipeline complete.
+2026-06-18 22:05:35  INFO      ============================================================
+
+── STDERR ──
+C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\01-data-ingestion\fund_master\amfi_fund_master.py:344: Pandas4Warning: For backward compatibility, 'str' dtypes are included by select_dtypes when 'object' dtype is specified. This behavior is deprecated and will be removed in a future version. Explicitly pass 'str' to `include` to select them, or to `exclude` to remove them and silence this warning.
+See https://pandas.pydata.org/docs/user_guide/migration-3-strings.html#string-migration-select-dtypes for details on how to write code that works with pandas 2 and 3.
+  str_cols = df.select_dtypes(include="object").columns
+
+========================================================================
+STAGE 04 — NAV INGESTION
+Status   : PASSED
+Script   : 01-data-ingestion/nav/amfi_nav.py
+Started  : 22:05:35
+Ended    : 22:05:37
+Duration : 00:00:02
+
+── STDOUT ──
+2026-06-18 22:05:35  INFO      ========== AMFI NAV ingestion pipeline start ==========
+2026-06-18 22:05:35  INFO      Downloading NAV data from https://portal.amfiindia.com/spages/NAVAll.txt
+2026-06-18 22:05:36  INFO      Download complete — 1603.8 KB received
+2026-06-18 22:05:36  INFO      Raw file saved → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\raw\nav\NAVAll_20260618_220536.txt
+2026-06-18 22:05:36  INFO      Parsed 14215 valid scheme rows (0 malformed lines skipped)
+2026-06-18 22:05:36  INFO      Cleaning complete — 14215 rows retained
+2026-06-18 22:05:36  INFO      ── Validation summary ──────────────────────────
+2026-06-18 22:05:36  INFO        Total rows       : 14215
+2026-06-18 22:05:36  INFO        Unique schemes   : 14215
+2026-06-18 22:05:36  INFO        Min nav_date     : 2008-10-02
+2026-06-18 22:05:36  INFO        Max nav_date     : 2026-06-18
+2026-06-18 22:05:36  INFO      ────────────────────────────────────────────────
+2026-06-18 22:05:36  INFO      Validation passed.
+2026-06-18 22:05:37  INFO      Parquet saved → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\processed\nav\nav_snapshot_20260618_220536.parquet
+2026-06-18 22:05:37  INFO      CSV saved     → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\processed\nav\nav_snapshot_20260618_220536.csv
+2026-06-18 22:05:37  INFO      Pipeline complete.
+2026-06-18 22:05:37  INFO        Parquet → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\processed\nav\nav_snapshot_20260618_220536.parquet
+2026-06-18 22:05:37  INFO        CSV     → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\processed\nav\nav_snapshot_20260618_220536.csv
+2026-06-18 22:05:37  INFO      ========== AMFI NAV ingestion pipeline end ==========
+
+── STDERR ──
+C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\01-data-ingestion\nav\amfi_nav.py:243: Pandas4Warning: For backward compatibility, 'str' dtypes are included by select_dtypes when 'object' dtype is specified. This behavior is deprecated and will be removed in a future version. Explicitly pass 'str' to `include` to select them, or to `exclude` to remove them and silence this warning.
+See https://pandas.pydata.org/docs/user_guide/migration-3-strings.html#string-migration-select-dtypes for details on how to write code that works with pandas 2 and 3.
+  str_cols = df.select_dtypes("object").columns
+
+========================================================================
+STAGE 05 — WAREHOUSE LOAD
+Status   : PASSED
+Script   : 02-data-warehouse/load_data.py
+Started  : 22:05:37
+Ended    : 22:06:17
+Duration : 00:00:40
+
+── STDOUT ──
+(no output)
+
+── STDERR ──
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ AMC Analytics Warehouse Load
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Discovering source files...
+  ✓ Found fund master file:    fund_master_20260618_220535.csv
+  ✓ Found NAV file:            nav_snapshot_20260618_220536.csv
+  ✓ Found expense ratio file:  expense_ratio_clean_June_2026_20260618_220533.csv
+  ✓ Found AUM file:            aum_clean_January_March_2026_20260618_220446.csv
+
+Reading datasets...
+  ✓ Fund Master loaded  (14215 rows)
+  ✓ NAV loaded          (14215 rows)
+  ✓ TER loaded          (30680 rows)
+  ✓ AUM loaded          (51 rows)
+
+Validating source files...
+  ✓ All source files validated
+
+Refreshing warehouse tables...
+  ✓ Tables cleared
+
+Loading amcs...
+  ✓ 51 rows inserted
+
+Loading schemes...
+  ✓ 14,215 rows inserted
+
+Loading nav_history...
+  ✓ 14,215 rows inserted
+
+Loading expense_ratio_history...
+  ✓ 30,672 rows inserted
+
+Loading aum_history...
+  ✓ 51 rows inserted
+
+Validating warehouse...
+  ✓ amcs                           51 rows
+  ✓ schemes                        14,215 rows
+  ✓ nav_history                    14,215 rows
+  ✓ expense_ratio_history          30,672 rows
+  ✓ aum_history                    51 rows
+
+Warehouse load complete.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+========================================================================
+STAGE 06 — MARKET SHARE CALCULATION
+Status   : PASSED
+Script   : 03-amc-analytics/market_share/calculate_market_share.py
+Started  : 22:06:17
+Ended    : 22:06:18
+Duration : 00:00:00
+
+── STDOUT ──
+
+────────────────────────────────────────────────────────────────────────────────
+  AMC MARKET SHARE REPORT
+  Period : 2026-01-01  →  2026-03-31
+  Industry AUM : ₹    8,153,966.49 Cr
+  AMC Count    : 51
+────────────────────────────────────────────────────────────────────────────────
+  Rank  AMC Name                                           AUM (₹ Cr)   Share %
+────────────────────────────────────────────────────────────────────────────────
+     1  SBI                                              1,248,003.01  15.3055%
+     2  ICICI Prudential                                 1,103,751.32  13.5364%
+     3  HDFC                                               927,451.27  11.3742%
+     4  Nippon India                                       724,965.14   8.8910%
+     5  Kotak Mahindra                                     580,950.24   7.1248%
+     6  Aditya Birla Sun Life                              435,865.96   5.3454%
+     7  UTI                                                388,469.81   4.7642%
+     8  Axis                                               359,601.25   4.4101%
+     9  Tata                                               227,511.98   2.7902%
+    10  DSP                                                225,399.63   2.7643%
+    11  Mirae Asset                                        221,354.56   2.7147%
+    12  Bandhan                                            195,325.09   2.3955%
+    13  Edelweiss                                          165,670.21   2.0318%
+    14  PPFAS                                              152,328.16   1.8681%
+    15  Invesco                                            140,647.77   1.7249%
+    16  HSBC                                               136,057.85   1.6686%
+    17  Motilal Oswal                                      131,741.95   1.6157%
+    18  Franklin Templeton                                 123,574.21   1.5155%
+    19  Canara Robeco                                      117,482.94   1.4408%
+    20  quant                                               88,362.54   1.0837%
+    21  Sundaram                                            74,882.97   0.9184%
+    22  Baroda BNP Paribas                                  54,607.95   0.6697%
+    23  LIC                                                 46,461.19   0.5698%
+    24  Mahindra Manulife                                   33,126.68   0.4063%
+    25  WhiteOak Capital                                    33,023.59   0.4050%
+    26  Bajaj Finserv                                       30,626.57   0.3756%
+    27  PGIM India                                          26,401.19   0.3238%
+    28  Union                                               26,194.06   0.3212%
+    29  Jio BlackRock                                       16,711.52   0.2049%
+    30  Bank of India                                       14,170.87   0.1738%
+    31  Zerodha                                             13,793.01   0.1692%
+    32  JM Financial                                        13,219.24   0.1621%
+    33  360 ONE                                             13,193.88   0.1618%
+    34  ITI                                                 10,825.14   0.1328%
+    35  Helios                                               9,400.54   0.1153%
+    36  Navi                                                 9,007.33   0.1105%
+    37  NJ                                                   6,965.17   0.0854%
+    38  Trust                                                4,252.96   0.0522%
+    39  Groww                                                4,181.25   0.0513%
+    40  Quantum                                              3,229.65   0.0396%
+    41  Abakkus                                              3,129.47   0.0384%
+    42  Old Bridge                                           2,566.10   0.0315%
+    43  Samco                                                2,532.11   0.0311%
+    44  Unifi                                                1,440.33   0.0177%
+    45  The Wealth Company                                   1,403.72   0.0172%
+    46  Shriram                                              1,255.48   0.0154%
+    47  Taurus                                                 977.53   0.0120%
+    48  IL&FS                                                  911.25   0.0112%
+    49  Capitalmind                                            472.11   0.0058%
+    50  Angel One                                              419.31   0.0051%
+    51  Choice                                                  69.43   0.0009%
+────────────────────────────────────────────────────────────────────────────────
+
+  Exports:
+    Latest      → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\market_share\market_share_latest.csv
+    Timestamped → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\market_share\market_share_20260618_220618.csv
+
+
+── STDERR ──
+2026-06-18 22:06:18 INFO ============================================================
+2026-06-18 22:06:18 INFO AMC Market Share Calculator — starting
+2026-06-18 22:06:18 INFO ============================================================
+2026-06-18 22:06:18 INFO Connecting to warehouse: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\02-data-warehouse\warehouse.db
+2026-06-18 22:06:18 INFO Latest AUM period_end detected: 2026-03-31
+2026-06-18 22:06:18 INFO Loaded 51 AMC records for period 2026-01-01 → 2026-03-31
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 712, in format
+    record.message = record.getMessage()
+                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 400, in getMessage
+    msg = msg % self.args
+          ~~~~^~~~~~~~~~~
+ValueError: unsupported format character ',' (0x2c) at index 22
+Call stack:
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\market_share\calculate_market_share.py", line 518, in <module>
+    main()
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\market_share\calculate_market_share.py", line 433, in main
+    df: pd.DataFrame = calculate_market_share(raw_df)
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\market_share\calculate_market_share.py", line 279, in calculate_market_share
+    logger.info(
+Message: 'Industry total AUM: ₹%,.2f Cr across %d AMCs'
+Arguments: (np.float64(8153966.486800001), 51)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 712, in format
+    record.message = record.getMessage()
+                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 400, in getMessage
+    msg = msg % self.args
+          ~~~~^~~~~~~~~~~
+ValueError: unsupported format character ',' (0x2c) at index 29
+Call stack:
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\market_share\calculate_market_share.py", line 518, in <module>
+    main()
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\market_share\calculate_market_share.py", line 436, in main
+    df = assign_rankings(df)
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\market_share\calculate_market_share.py", line 316, in assign_rankings
+    logger.info(
+Message: 'Rankings assigned. #1: %s (₹%,.2f Cr, %.4f%%)'
+Arguments: ('SBI', np.float64(1248003.0067), np.float64(15.305471376664622))
+2026-06-18 22:06:18 INFO Exported latest CSV    : C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\market_share\market_share_latest.csv
+2026-06-18 22:06:18 INFO Exported timestamped CSV: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\market_share\market_share_20260618_220618.csv
+2026-06-18 22:06:18 INFO ============================================================
+2026-06-18 22:06:18 INFO Market share calculation completed successfully.
+2026-06-18 22:06:18 INFO ============================================================
+
+========================================================================
+STAGE 07 — AMC RANKINGS
+Status   : PASSED
+Script   : 03-amc-analytics/rankings/ranking_amcs.py
+Started  : 22:06:18
+Ended    : 22:06:18
+Duration : 00:00:00
+
+── STDOUT ──
+
+──────────────────────────────────────────────────────────────────────────────────
+  AMC RANKINGS REPORT
+  Period        : 2026-01-01  →  2026-03-31
+  Industry AUM  : ₹      8,153,966.49 Cr
+  AMC Count     : 51
+──────────────────────────────────────────────────────────────────────────────────
+  MARKET CONCENTRATION
+    Top  3 AMCs : 40.2161%  of industry AUM
+    Top  5 AMCs : 56.2318%  of industry AUM
+    Top 10 AMCs : 76.3060%  of industry AUM
+──────────────────────────────────────────────────────────────────────────────────
+  TOP AMC
+    1. SBI  —  ₹1,248,003.01 Cr  (15.3055%)
+──────────────────────────────────────────────────────────────────────────────────
+  Rank  AMC Name                                            AUM (₹ Cr)   Share %
+──────────────────────────────────────────────────────────────────────────────────
+     1  SBI                                               1,248,003.01  15.3055% ◀
+     2  ICICI Prudential                                  1,103,751.32  13.5364% ◀
+     3  HDFC                                                927,451.27  11.3742% ◀
+     4  Nippon India                                        724,965.14   8.8910%
+     5  Kotak Mahindra                                      580,950.24   7.1248%
+     6  Aditya Birla Sun Life                               435,865.96   5.3454%
+     7  UTI                                                 388,469.81   4.7642%
+     8  Axis                                                359,601.25   4.4101%
+     9  Tata                                                227,511.98   2.7902%
+    10  DSP                                                 225,399.63   2.7643%
+    11  Mirae Asset                                         221,354.56   2.7147%
+    12  Bandhan                                             195,325.09   2.3955%
+    13  Edelweiss                                           165,670.21   2.0318%
+    14  PPFAS                                               152,328.16   1.8681%
+    15  Invesco                                             140,647.77   1.7249%
+    16  HSBC                                                136,057.85   1.6686%
+    17  Motilal Oswal                                       131,741.95   1.6157%
+    18  Franklin Templeton                                  123,574.21   1.5155%
+    19  Canara Robeco                                       117,482.94   1.4408%
+    20  quant                                                88,362.54   1.0837%
+    21  Sundaram                                             74,882.97   0.9184%
+    22  Baroda BNP Paribas                                   54,607.95   0.6697%
+    23  LIC                                                  46,461.19   0.5698%
+    24  Mahindra Manulife                                    33,126.68   0.4063%
+    25  WhiteOak Capital                                     33,023.59   0.4050%
+    26  Bajaj Finserv                                        30,626.57   0.3756%
+    27  PGIM India                                           26,401.19   0.3238%
+    28  Union                                                26,194.06   0.3212%
+    29  Jio BlackRock                                        16,711.52   0.2049%
+    30  Bank of India                                        14,170.87   0.1738%
+    31  Zerodha                                              13,793.01   0.1692%
+    32  JM Financial                                         13,219.24   0.1621%
+    33  360 ONE                                              13,193.88   0.1618%
+    34  ITI                                                  10,825.14   0.1328%
+    35  Helios                                                9,400.54   0.1153%
+    36  Navi                                                  9,007.33   0.1105%
+    37  NJ                                                    6,965.17   0.0854%
+    38  Trust                                                 4,252.96   0.0522%
+    39  Groww                                                 4,181.25   0.0513%
+    40  Quantum                                               3,229.65   0.0396%
+    41  Abakkus                                               3,129.47   0.0384%
+    42  Old Bridge                                            2,566.10   0.0315%
+    43  Samco                                                 2,532.11   0.0311%
+    44  Unifi                                                 1,440.33   0.0177%
+    45  The Wealth Company                                    1,403.72   0.0172%
+    46  Shriram                                               1,255.48   0.0154%
+    47  Taurus                                                  977.53   0.0120%
+    48  IL&FS                                                   911.25   0.0112%
+    49  Capitalmind                                             472.11   0.0058%
+    50  Angel One                                               419.31   0.0051%
+    51  Choice                                                   69.43   0.0009%
+──────────────────────────────────────────────────────────────────────────────────
+
+  TOP 10 AMCs BY AUM
+──────────────────────────────────────────────────────────────────────────────────
+  Rank  AMC Name                                            AUM (₹ Cr)   Share %
+──────────────────────────────────────────────────────────────────────────────────
+     1  SBI                                               1,248,003.01  15.3055%
+     2  ICICI Prudential                                  1,103,751.32  13.5364%
+     3  HDFC                                                927,451.27  11.3742%
+     4  Nippon India                                        724,965.14   8.8910%
+     5  Kotak Mahindra                                      580,950.24   7.1248%
+     6  Aditya Birla Sun Life                               435,865.96   5.3454%
+     7  UTI                                                 388,469.81   4.7642%
+     8  Axis                                                359,601.25   4.4101%
+     9  Tata                                                227,511.98   2.7902%
+    10  DSP                                                 225,399.63   2.7643%
+──────────────────────────────────────────────────────────────────────────────────
+
+  EXPORTS
+    full_latest    → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\rankings\amc_rankings_latest.csv
+    full_ts        → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\rankings\amc_rankings_20260618_220618.csv
+    top10_latest   → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\rankings\top_10_amcs_latest.csv
+    top10_ts       → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\rankings\top_10_amcs_20260618_220618.csv
+
+
+── STDERR ──
+2026-06-18 22:06:18 INFO ============================================================
+2026-06-18 22:06:18 INFO AMC Rankings Module — starting
+2026-06-18 22:06:18 INFO ============================================================
+2026-06-18 22:06:18 INFO Connecting to warehouse: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\02-data-warehouse\warehouse.db
+2026-06-18 22:06:18 INFO Latest AUM period_end: 2026-03-31
+2026-06-18 22:06:18 INFO Loaded 51 AMC records  |  period: 2026-01-01 → 2026-03-31
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 712, in format
+    record.message = record.getMessage()
+                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 400, in getMessage
+    msg = msg % self.args
+          ~~~~^~~~~~~~~~~
+ValueError: unsupported format character ',' (0x2c) at index 16
+Call stack:
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\rankings\ranking_amcs.py", line 672, in <module>
+    main()
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\rankings\ranking_amcs.py", line 627, in main
+    df: pd.DataFrame = calculate_market_share(raw_df)
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\rankings\ranking_amcs.py", line 304, in calculate_market_share
+    logger.info(
+Message: 'Industry AUM: ₹%,.2f Cr  |  AMC count: %d'
+Arguments: (8153966.486800001, 51)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 712, in format
+    record.message = record.getMessage()
+                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Aditya\AppData\Local\Programs\Python\Python314\Lib\logging\__init__.py", line 400, in getMessage
+    msg = msg % self.args
+          ~~~~^~~~~~~~~~~
+ValueError: unsupported format character ',' (0x2c) at index 29
+Call stack:
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\rankings\ranking_amcs.py", line 672, in <module>
+    main()
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\rankings\ranking_amcs.py", line 630, in main
+    ranked_df: pd.DataFrame = rank_amcs(df)
+  File "C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\03-amc-analytics\rankings\ranking_amcs.py", line 342, in rank_amcs
+    logger.info(
+Message: 'Ranked %d AMCs  |  #1: %s (₹%,.2f Cr)'
+Arguments: (51, 'SBI', np.float64(1248003.0067))
+2026-06-18 22:06:18 INFO Concentration  |  Top 3: 40.22%  Top 5: 56.23%  Top 10: 76.31%
+2026-06-18 22:06:18 INFO Exported full_latest    → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\rankings\amc_rankings_latest.csv
+2026-06-18 22:06:18 INFO Exported full_ts        → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\rankings\amc_rankings_20260618_220618.csv
+2026-06-18 22:06:18 INFO Exported top10_latest   → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\rankings\top_10_amcs_latest.csv
+2026-06-18 22:06:18 INFO Exported top10_ts       → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\rankings\top_10_amcs_20260618_220618.csv
+2026-06-18 22:06:18 INFO ============================================================
+2026-06-18 22:06:18 INFO AMC Rankings Module — completed successfully.
+2026-06-18 22:06:18 INFO ============================================================
+
+========================================================================
+STAGE 08 — REVENUE ESTIMATION
+Status   : PASSED
+Script   : 04-revenue-model/estimate_revenue.py
+Started  : 22:06:18
+Ended    : 22:06:19
+Duration : 00:00:00
+
+── STDOUT ──
+
+==================================================
+AMC Revenue Estimation
+======================
+
+[1/5] Connecting to warehouse...
+[2/5] Loading latest AUM snapshot...
+[3/5] Estimating revenue...
+[4/5] Exporting results...
+[5/5] Complete
+
+==================================================
+AMC Revenue Estimation
+======================
+
+Summary:
+  AMCs Processed   : 51
+  Industry AUM     : ₹8,153,966.49 Cr
+  Estimated Revenue: ₹61,154.74 Cr
+
+Files:
+  * amc_revenue_latest.csv
+  * amc_revenue_20260618_220619.csv
+
+==================================================
+
+── STDERR ──
+2026-06-18 22:06:19  INFO      Connected to warehouse: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\02-data-warehouse\warehouse.db
+2026-06-18 22:06:19  INFO      Latest period_end in aum_history: 2026-03-31
+2026-06-18 22:06:19  INFO      Loaded 51 AMC rows for period_end = 2026-03-31
+2026-06-18 22:06:19  INFO      Exported: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\revenue\amc_revenue_20260618_220619.csv
+2026-06-18 22:06:19  INFO      Exported: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\revenue\amc_revenue_latest.csv
+
+========================================================================
+STAGE 09 — REVENUE VALIDATION
+Status   : PASSED
+Script   : 04-revenue-model/validate_revenue.py
+Started  : 22:06:19
+Ended    : 22:06:19
+Duration : 00:00:00
+
+── STDOUT ──
+
+==================================================
+Revenue Validation
+==================
+
+[1/15] Checking file exists...
+  PASS
+[2/15] Checking file readable...
+  PASS
+[3/15] Checking required columns...
+  PASS
+[4/15] Checking not empty...
+  PASS
+[5/15] Checking no duplicate amc names...
+  PASS
+[6/15] Checking rank sequence...
+  PASS
+[7/15] Checking positive aum...
+  PASS
+[8/15] Checking positive revenue...
+  PASS
+[9/15] Checking yield range...
+  PASS
+[10/15] Checking revenue formula...
+  PASS
+[11/15] Checking revenue sort order...
+  PASS
+[12/15] Checking rank revenue consistency...
+  PASS
+[13/15] Checking industry totals...
+  PASS
+[14/15] Checking top amc sanity...
+  PASS
+[15/15] Checking null values...
+  PASS
+
+==================================================
+Validation Summary
+==================
+
+  Checks Run : 15
+  Passed     : 15
+  Failed     : 0
+  Warnings   : 0
+
+  Industry AUM:
+    ₹8,153,966.49 Cr
+
+  Industry Revenue:
+    ₹61,154.74 Cr
+
+  Validation Status: PASS
+
+  Files:
+    * revenue_validation_latest.csv
+    * revenue_validation_20260618_220619.csv
+
+==================================================
+
+── STDERR ──
+2026-06-18 22:06:19  INFO      Exported: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\revenue\revenue_validation_20260618_220619.csv
+2026-06-18 22:06:19  INFO      Exported: C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\revenue\revenue_validation_latest.csv
+
+========================================================================
+STAGE 10 — AUM FORECAST
+Status   : PASSED
+Script   : 05-forcasting/forecast_aum.py
+Started  : 22:06:19
+Ended    : 22:06:20
+Duration : 00:00:00
+
+── STDOUT ──
+=================================================
+AMC AUM FORECAST
+================
+
+[1/6] Connecting to warehouse...
+PASS
+
+[2/6] Loading AUM data...
+PASS
+
+[3/6] Loading forecasting scenarios...
+PASS
+
+[4/6] Generating forecasts...
+PASS
+
+[5/6] Validating output...
+PASS
+
+[6/6] Exporting results...
+PASS
+
+=================================================
+FORECAST SUMMARY
+================
+
+AMCs Processed  : 51
+Scenarios       : 3
+Forecast Rows   : 153
+
+Latest File:
+C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\forecasting\forecast_aum_latest.csv
+
+Archive File:
+C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\forecasting\forecast_aum_20260618_220620.csv
+
+Completed Successfully
+
+── STDERR ──
+22:06:20  INFO      Discovered AUM table: 'aum_history'
+22:06:20  INFO      Loaded AUM snapshot for period-end: 2026-03-31
+22:06:20  INFO      Loaded 51 AMCs from table 'aum_history'.
+22:06:20  INFO      Loaded scenario: Base Case    | growth=12% | horizon=3 yr
+22:06:20  INFO      Loaded scenario: Bull Case    | growth=18% | horizon=3 yr
+22:06:20  INFO      Loaded scenario: Bear Case    | growth=6% | horizon=3 yr
+22:06:20  INFO      Generated forecast — scenario: Base Case    | rows: 51
+22:06:20  INFO      Generated forecast — scenario: Bull Case    | rows: 51
+22:06:20  INFO      Generated forecast — scenario: Bear Case    | rows: 51
+22:06:20  INFO      Exported latest  → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\forecasting\forecast_aum_latest.csv
+22:06:20  INFO      Exported archive → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\forecasting\forecast_aum_20260618_220620.csv
+
+========================================================================
+STAGE 11 — REVENUE FORECAST
+Status   : PASSED
+Script   : 05-forcasting/forecast_revenue.py
+Started  : 22:06:20
+Ended    : 22:06:20
+Duration : 00:00:00
+
+── STDOUT ──
+=================================================
+AMC REVENUE FORECAST
+====================
+
+[1/7] Loading revenue estimates...
+PASS
+
+[2/7] Loading AUM forecasts...
+PASS
+
+[3/7] Validating inputs...
+PASS
+
+[4/7] Calculating revenue yields...
+PASS
+
+[5/7] Generating revenue forecasts...
+PASS
+
+[6/7] Validating outputs...
+PASS
+
+[7/7] Exporting results...
+PASS
+
+=================================================
+FORECAST SUMMARY
+================
+
+AMCs Processed  : 51
+Scenarios       : 3
+Forecast Rows   : 153
+
+Average Yield   : 0.75%
+
+Latest File:
+C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\forecasting\forecast_revenue_latest.csv
+
+Archive File:
+C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\forecasting\forecast_revenue_20260618_220620.csv
+
+Completed Successfully
+
+── STDERR ──
+22:06:20  INFO      Loaded revenue file: amc_revenue_latest.csv  (51 rows, 7 cols)
+22:06:20  INFO      Revenue file columns resolved → amc='amc_name', aum='aum_cr', revenue='estimated_revenue_cr'
+22:06:20  INFO      Loaded AUM forecast file: forecast_aum_latest.csv  (153 rows, 6 cols)
+22:06:20  INFO      AUM forecast columns resolved → amc='amc_name', scenario='scenario', y1='year_1_aum_cr', y2='year_2_aum_cr', y3='year_3_aum_cr'
+22:06:20  INFO      Revenue yield stats — mean: 0.7499%  min: 0.7488%  max: 0.7503%
+22:06:20  INFO      Revenue forecasts generated — 153 rows  (51 AMCs × 3 scenarios)
+22:06:20  INFO      Exported latest  → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\forecasting\forecast_revenue_latest.csv
+22:06:20  INFO      Exported archive → C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard\data\exports\forecasting\forecast_revenue_20260618_220620.csv
+
+========================================================================
+STAGE 12 — PUSH TO GITHUB
+Status   : PASSED
+Script   : 07-automation/push_to_github.py
+Started  : 22:06:20
+Ended    : 22:06:26
+Duration : 00:00:06
+
+── STDOUT ──
+=================================================
+AMC Dashboard — GitHub Sync
+=================================================
+Project root : C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard
+
+[1/8] Checking Git installation...
+      git version 2.54.0.windows.1
+[2/8] Checking repository...
+      Repository root : C:\Users\Aditya\Nextcloud\internship\coding\job 2\amc-dashboard
+      Remote 'origin' : https://github.com/aam-007/amc-dashboard
+      Warning: remote does not look like an SSH URL (expected it to start with 'git@github.com:'). If the push step fails with an authentication error, configure the remote to use SSH, e.g.:
+        git remote set-url origin git@github.com:aam-007/amc-dashboard.git
+[3/8] Checking for changes...
+      20 changed file(s) detected.
+[4/8] Staging changes...
+[5/8] Generating commit message...
+      Message: AMC Dashboard Update | 2026-06-18 22:06
+[6/8] Creating commit...
+      Commit created: 'AMC Dashboard Update | 2026-06-18 22:06'
+[7/8] Pulling latest changes from origin/main...
+      Current branch main is up to date.
+[8/8] Pushing changes to origin/main...
+      To https://github.com/aam-007/amc-dashboard
+         7831ac0..3c6bcda  main -> main
+
+=================================================
+GitHub Sync Complete
+=================================================
+
+Repository : amc-dashboard
+Remote     : https://github.com/aam-007/amc-dashboard
+Branch     : main
+Commit     : 3c6bcda
+Status     : SUCCESS
+
+
+── STDERR ──
+(no output)
+
+========================================================================
+END OF LOG
+========================================================================
