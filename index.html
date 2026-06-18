@@ -1247,10 +1247,10 @@ async function loadForecastRev(path) {
   return { perAmc, industry };
 }
 
-/* Load manifest */
+/* Load manifest — cache-busting query string added */
 async function loadManifest() {
   try {
-    const resp = await fetch('data_manifest.json');
+    const resp = await fetch('data_manifest.json?t=' + Date.now());
     if (!resp.ok) return null;
     return await resp.json();
   } catch {
