@@ -439,6 +439,7 @@ As of the last recorded run, the warehouse held **51 AMCs** and **14,214 schemes
 
 **Aditya Mishra**
 MBA Tech, Data Science & Finance — NMIMS-MPSTME, Mumbai
+
 aditya.mishra10@nmims.in 
 
-Made during 8 week internship at Helios Capital AMC. 
+Designed and developed during an 8-week internship at Helios Capital AMC.
