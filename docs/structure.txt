@@ -44,10 +44,7 @@ amc-dashboard/
 │   └── bear_case.py
 │
 ├── 06-dashboard/ (moved to the root folder) 
-│   ├── index.html
-│   ├── css/
-│   ├── js/
-│   └── assets/
+│   ├── index.html│ 
 │
 ├── 07-automation/
 │   ├── run_pipeline.py
