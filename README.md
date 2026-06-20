@@ -311,7 +311,7 @@ See [Phase 2](#phase-2--data-warehouse) above for the full rationale behind the 
 
 ```bash
 # Clone and enter the repo
-git clone <repo-url> amc-dashboard
+git clone https://github.com/aam-007/amc-dashboard
 cd amc-dashboard
 
 # Create a virtual environment
@@ -439,3 +439,6 @@ As of the last recorded run, the warehouse held **51 AMCs** and **14,214 schemes
 
 **Aditya Mishra**
 MBA Tech, Data Science & Finance — NMIMS-MPSTME, Mumbai
+aditya.mishra10@nmims.in 
+
+Made during 8 week internship at Helios Capital AMC. 
