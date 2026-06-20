@@ -115,8 +115,7 @@ amc-dashboard/
 └── data_manifest.json         # generated state file — current "latest" pointers
 ```
 
-> **Note on numbering:** Phase 6 is part of a differnt, broader project and isn't part of the core 12-stage pipeline documented here.
-
+> **Note on numbering:** Phase 6 initially housed "index.html" (to better engage with "data_manifest.json" , which was later moved to the root folder. The names of the sub-folders were not changed because it would be a tedious task. This is being mentioned here to avoid any confusion.
 ---
 
 ## The twelve-stage pipeline
