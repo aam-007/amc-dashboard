@@ -115,7 +115,7 @@ amc-dashboard/
 └── data_manifest.json         # generated state file — current "latest" pointers
 ```
 
-> **Note on numbering:** Phase 6 (an equity-fund/NSE-benchmark analytics extension) exists in the broader project but isn't part of the core 12-stage pipeline documented here.
+> **Note on numbering:** Phase 6 is part of a differnt, broader project and isn't part of the core 12-stage pipeline documented here.
 
 ---
 
