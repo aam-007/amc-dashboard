@@ -43,7 +43,7 @@ amc-dashboard/
 │   ├── base_case.py
 │   └── bear_case.py
 │
-├── 06-dashboard/
+├── 06-dashboard/ (moved to the root folder) 
 │   ├── index.html
 │   ├── css/
 │   ├── js/
