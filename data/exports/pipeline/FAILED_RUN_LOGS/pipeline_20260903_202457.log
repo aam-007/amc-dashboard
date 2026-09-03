@@ -1,0 +1,253 @@
+========================================================================
+AMC DASHBOARD PIPELINE — RUN LOG
+========================================================================
+Pipeline Status : FAILED
+Started         : 2026-09-03 20:24:57
+Ended           : 2026-09-03 20:26:04
+Total Runtime   : 00:01:07
+Stages Executed : 4
+Stages Passed   : 3
+Stages Failed   : 1
+
+========================================================================
+STAGE 01 — AUM INGESTION
+Status   : PASSED
+Script   : 01-data-ingestion/aum/amfi_aum.py
+Started  : 20:24:57
+Ended    : 20:25:27
+Duration : 00:00:30
+
+── STDOUT ──
+
+══════════════════════════════════════════════════════════
+  AMFI AUM Ingestion Pipeline
+══════════════════════════════════════════════════════════
+
+  [downloader] Opening https://www.amfiindia.com/aum-data/average-aum …
+  [downloader] Applying filters …
+  [downloader] Latest FY     : April 2026 - March 2027
+  [downloader] Latest period : April - June 2026
+  [downloader] Clicking GO …
+  [downloader] Downloading Excel …
+  [downloader] Saved raw file : C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\raw\aum\amfi_aum_April_June_2026_20260903_202526.xlsx
+
+[Stage 3] Loading raw Excel …
+  [loader]     Raw shape     : (8716, 4)
+
+[Stage 4] Extracting AMC total rows …
+  [extractor]  Raw extracted rows (pre-cleaning): 51
+
+[Stage 5] Cleaning & normalising …
+  [cleaner]    Final AMC rows (post-cleaning): 51
+
+[Stage 6] Validating …
+  [validator]  All checks passed (51 AMCs).
+
+══════════════════════════════════════════════════════════
+  Period        : April - June 2026
+  AMCs          : 51
+  Industry AUM  : ₹8,314,467 Cr
+  Raw Excel     : C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\raw\aum\amfi_aum_April_June_2026_20260903_202526.xlsx
+  Clean CSV     : C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\processed\aum\aum_clean_April_June_2026_20260903_202527.csv
+══════════════════════════════════════════════════════════
+
+Top-10 AMCs by AUM (₹ Cr):
+
+                 AMC Name    AUM (₹ Cr)
+1                     SBI  1,257,352.29
+2        ICICI Prudential  1,114,544.13
+3                    HDFC    935,100.38
+4            Nippon India    751,518.71
+5          Kotak Mahindra    590,460.00
+6   Aditya Birla Sun Life    427,675.22
+7                     UTI    392,691.07
+8                    Axis    369,030.12
+9                     DSP    229,801.60
+10                   Tata    228,538.18
+
+
+── STDERR ──
+(no output)
+
+========================================================================
+STAGE 02 — EXPENSE RATIO INGESTION
+Status   : PASSED
+Script   : 01-data-ingestion/expense_ratio/amfi_amc_expense_ratio.py
+Started  : 20:25:27
+Ended    : 20:26:01
+Duration : 00:00:33
+
+── STDOUT ──
+╔══════════════════════════════════════════════════════╗
+║   AMFI TER Ingestion Pipeline — starting             ║
+╚══════════════════════════════════════════════════════╝
+
+[runner] Stage 2 — Downloading TER Excel …
+[downloader] Download directory: C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\raw\expense_ratio
+[downloader] Launching Chromium in headless mode …
+[downloader] Navigating to https://www.amfiindia.com/ter-of-mf-schemes …
+[downloader] Page loaded, network idle.
+[downloader] Initial MuiAutocomplete dropdowns found: 5
+[downloader] Starting filter selection …
+    [dropdown 0] selecting first option for 'Financial Year' …
+    [dropdown 0] waiting for listbox options to appear …
+    [dropdown 0] clicking option: '2026-2027'
+    [dropdown 0] selected: '2026-2027'
+    [dropdown 1] selecting first option for 'Month' …
+    [dropdown 1] waiting for listbox options to appear …
+    [dropdown 1] clicking option: 'September-2026'
+    [dropdown 1] selected: 'September-2026'
+    [dropdown 2] selecting first option for 'Fund Type' …
+    [dropdown 2] waiting for listbox options to appear …
+    [dropdown 2] clicking option: 'All'
+    [dropdown 2] selected: 'All'
+[downloader] Checking for Sub Category dropdown …
+[downloader] Dropdowns after Fund Type: 6
+[downloader] Sub Category dropdown appeared (dynamic).
+    [dropdown 3] selecting first option for 'Category' …
+    [dropdown 3] waiting for listbox options to appear …
+    [dropdown 3] clicking option: 'All'
+    [dropdown 3] selected: 'All'
+    [dropdown 4] selecting first option for 'Sub Category' …
+    [dropdown 4] waiting for listbox options to appear …
+    [dropdown 4] clicking option: 'All'
+    [dropdown 4] selected: 'All'
+    [dropdown 5] selecting first option for 'Mutual Fund' …
+    [dropdown 5] waiting for listbox options to appear …
+    [dropdown 5] clicking option: 'All'
+    [dropdown 5] selected: 'All'
+    waiting for GO button to become enabled …
+    GO button is now enabled.
+[downloader] Clicking GO button …
+[downloader] GO clicked, waiting for results …
+[downloader] Looking for 'Download Excel' button …
+[downloader] 'Download Excel' button found.
+[downloader] Triggering download …
+[downloader] Saving file to: C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\raw\expense_ratio\amfi_expense_ratio_2026_2027_September_2026_20260903_202600.xlsx
+[downloader] Download complete: C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\raw\expense_ratio\amfi_expense_ratio_2026_2027_September_2026_20260903_202600.xlsx
+[runner] Downloaded: data\raw\expense_ratio\amfi_expense_ratio_2026_2027_September_2026_20260903_202600.xlsx  |  period=September-2026  |  FY=2026-2027
+
+[runner] Stage 3 — Loading Excel …
+
+[loader] Reading Excel: data\raw\expense_ratio\amfi_expense_ratio_2026_2027_September_2026_20260903_202600.xlsx
+[loader] Loaded shape: 3,507 rows × 15 columns
+[loader] Columns: ['NSDL Scheme Code', 'Scheme Name', 'Scheme Type', 'Scheme Category', 'TER Date', 'Regular Plan - Base Expense Ratio (BER) (%)', 'Regular Plan - Brokerage cost (%)', 'Regular Plan - Transaction Cost incurred for the purpose of execution of trade (%)', 'Regular Plan - Statutory Levies (including GST) (%)', 'Regular Plan - Total TER (%)', 'Direct Plan - Base Expense Ratio (BER) (%)', 'Direct Plan - Brokerage cost (%)', 'Direct Plan - Transaction Cost incurred for the purpose of execution of trade (%)', 'Direct Plan - Statutory Levies (including GST) (%)', 'Direct Plan - Total TER (%)']
+
+[runner] Stage 4 — Normalising columns …
+
+[normalizer] Starting column normalisation …
+[normalizer] Renamed 7 columns.
+[normalizer] Retained 7 required columns: ['scheme_code', 'scheme_name', 'scheme_type', 'scheme_category', 'ter_date', 'regular_ter', 'direct_ter']
+[normalizer] Stripped whitespace from 7 string columns.
+[normalizer] Output shape: 3,507 rows × 7 columns
+
+[runner] Stage 5 — Cleaning data …
+
+[cleaner] Cleaning data for period: September-2026
+[cleaner] Dropping 13 rows with unparseable ter_date.
+[cleaner] ingested_at set to: 2026-09-03T14:56:01Z
+[cleaner] Rows: 3,507 → 3,494 (13 dropped total)
+
+[runner] Stage 6 — Validating data …
+
+[validator] Running validation checks …
+[validator] ✓ No null values in mandatory columns.
+[validator] ✓ No negative TER values.
+[validator] ✓ No duplicate (scheme_code, ter_date) pairs.
+[validator] ✓ Row count 3,494 within expected range.
+[validator] Validation complete.
+
+[runner] Stage 7 — Writing processed CSV …
+[runner] Saved: C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\processed\expense_ratio\expense_ratio_clean_September_2026_20260903_202601.csv
+
+════════════════════════════════════════════════════════════
+  AMFI TER INGESTION — RUN SUMMARY
+════════════════════════════════════════════════════════════
+  Period            : September-2026
+  Financial Year    : 2026-2027
+  Rows              : 3,494
+  Unique Schemes    : 1,800
+  Processed CSV     : C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\processed\expense_ratio\expense_ratio_clean_September_2026_20260903_202601.csv
+────────────────────────────────────────────────────────────
+  Top 10 Schemes by Average Regular TER
+────────────────────────────────────────────────────────────
+   1. UTI NIFTY 500 INDEX FUND                            45.3100%
+   2. Axis Nifty Energy Index Fund                        10.2100%
+   3. WhiteOak Capital Dividend Yield Fund                9.8600%
+   4. Axis Nifty Energy ETF                               9.4200%
+   5. Edelweiss Nifty REITs & Realty Index Fund           8.8900%
+   6. Motilal Oswal Nifty Oil & Gas ETF                   8.8300%
+   7. Motilal Oswal Nifty Metal ETF                       7.9200%
+   8. UTI Nifty 500 Exchange Traded Fund                  7.3900%
+   9. AlphaGrep Flexi Cap Fund                            5.1700%
+  10. THE WEALTH COMPANY MID CAP FUND                     5.0100%
+════════════════════════════════════════════════════════════
+
+── STDERR ──
+C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\01-data-ingestion\expense_ratio\amfi_amc_expense_ratio.py:416: Pandas4Warning: For backward compatibility, 'str' dtypes are included by select_dtypes when 'object' dtype is specified. This behavior is deprecated and will be removed in a future version. Explicitly pass 'str' to `include` to select them, or to `exclude` to remove them and silence this warning.
+See https://pandas.pydata.org/docs/user_guide/migration-3-strings.html#string-migration-select-dtypes for details on how to write code that works with pandas 2 and 3.
+  str_cols = df.select_dtypes(include="object").columns
+
+========================================================================
+STAGE 03 — FUND MASTER INGESTION
+Status   : PASSED
+Script   : 01-data-ingestion/fund_master/amfi_fund_master.py
+Started  : 20:26:01
+Ended    : 20:26:03
+Duration : 00:00:02
+
+── STDOUT ──
+2026-09-03 20:26:02  INFO      ============================================================
+2026-09-03 20:26:02  INFO      AMFI Fund Master Ingestion Pipeline — started
+2026-09-03 20:26:02  INFO      ============================================================
+2026-09-03 20:26:02  INFO      Downloading NAVAll.txt (attempt 1/3) …
+2026-09-03 20:26:03  INFO      Download complete — 1480.16 KB received.
+2026-09-03 20:26:03  INFO      Raw file saved → data\raw\fund_master\NAVAll_20260903_202603.txt
+2026-09-03 20:26:03  INFO      Parsing complete — 14332 records extracted, 0 rows skipped.
+2026-09-03 20:26:03  INFO      14332 rows have non-numeric NAV — retained with NaN.
+2026-09-03 20:26:03  INFO      14332 rows have unparseable nav_date — retained with NaT.
+2026-09-03 20:26:03  INFO      Clean DataFrame — 14332 records, 10 columns.
+2026-09-03 20:26:03  INFO      Processed file saved → data\processed\fund_master\fund_master_20260903_202603.csv  (14332 rows × 10 cols)
+2026-09-03 20:26:03  INFO      ============================================================
+2026-09-03 20:26:03  INFO      Pipeline complete.
+2026-09-03 20:26:03  INFO      ============================================================
+
+── STDERR ──
+C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\01-data-ingestion\fund_master\amfi_fund_master.py:344: Pandas4Warning: For backward compatibility, 'str' dtypes are included by select_dtypes when 'object' dtype is specified. This behavior is deprecated and will be removed in a future version. Explicitly pass 'str' to `include` to select them, or to `exclude` to remove them and silence this warning.
+See https://pandas.pydata.org/docs/user_guide/migration-3-strings.html#string-migration-select-dtypes for details on how to write code that works with pandas 2 and 3.
+  str_cols = df.select_dtypes(include="object").columns
+C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\01-data-ingestion\fund_master\amfi_fund_master.py:364: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  df["nav_date"] = pd.to_datetime(df["nav_date"], dayfirst=True, errors="coerce")
+
+========================================================================
+STAGE 04 — NAV INGESTION
+Status   : FAILED
+Script   : 01-data-ingestion/nav/amfi_nav.py
+Started  : 20:26:03
+Ended    : 20:26:04
+Duration : 00:00:01
+
+── STDOUT ──
+2026-09-03 20:26:04  INFO      ========== AMFI NAV ingestion pipeline start ==========
+2026-09-03 20:26:04  INFO      Downloading NAV data from https://portal.amfiindia.com/spages/NAVAll.txt
+2026-09-03 20:26:04  INFO      Download complete — 1480.2 KB received
+2026-09-03 20:26:04  INFO      Raw file saved → C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\data\raw\nav\NAVAll_20260903_202604.txt
+2026-09-03 20:26:04  INFO      Parsed 14332 valid scheme rows (0 malformed lines skipped)
+2026-09-03 20:26:04  WARNING   Dropped 14332 rows with non-numeric NAV
+2026-09-03 20:26:04  INFO      Cleaning complete — 0 rows retained
+2026-09-03 20:26:04  INFO      ── Validation summary ──────────────────────────
+2026-09-03 20:26:04  INFO        Total rows       : 0
+2026-09-03 20:26:04  INFO        Unique schemes   : 0
+2026-09-03 20:26:04  INFO        Min nav_date     : N/A
+2026-09-03 20:26:04  INFO        Max nav_date     : N/A
+2026-09-03 20:26:04  INFO      ────────────────────────────────────────────────
+2026-09-03 20:26:04  ERROR     Pipeline aborted: Validation failed: only 0 rows present (minimum required: 1000). This likely indicates a bad download or parsing failure.
+
+── STDERR ──
+C:\Users\Aditya\Nextcloud2\internship\helios\WORK\amc-dashboard\01-data-ingestion\nav\amfi_nav.py:243: Pandas4Warning: For backward compatibility, 'str' dtypes are included by select_dtypes when 'object' dtype is specified. This behavior is deprecated and will be removed in a future version. Explicitly pass 'str' to `include` to select them, or to `exclude` to remove them and silence this warning.
+See https://pandas.pydata.org/docs/user_guide/migration-3-strings.html#string-migration-select-dtypes for details on how to write code that works with pandas 2 and 3.
+  str_cols = df.select_dtypes("object").columns
+
+========================================================================
+END OF LOG
+========================================================================

@@ -147,22 +147,89 @@ def save_raw_file(content: str, raw_dir: Path = RAW_DIR) -> Path:
 # a semicolon (the scheme_code field).
 _SCHEME_ROW_RE = re.compile(r"^\d+;")
 
+COLUMNS = [
+    "scheme_code",
+    "isin_growth",
+    "isin_reinvestment",
+    "scheme_name",
+    "nav",
+    "nav_date",
+]
+
+# Fallback fixed positions, used only if no header row is found in the file
+# (legacy 6-field layout: code;isin_g;isin_r;name;nav;date).
+_LEGACY_FIELD_COUNT = 6
+
+
+def _build_header_map(header_line: str) -> dict[str, int]:
+    """
+    Map logical column names to their positional index in the current
+    NAVAll.txt header row.
+
+    AMFI has changed this header's field layout before (e.g. inserting
+    ``Plan`` / ``Option`` columns between Scheme Name and Net Asset Value),
+    which silently breaks any parser that assumes fixed positions. Matching
+    by header text instead of position makes the parser resilient to that.
+
+    Parameters
+    ----------
+    header_line : str
+        The raw header line, semicolon-separated.
+
+    Returns
+    -------
+    dict[str, int]
+        Logical column name -> field index in each data row.
+
+    Raises
+    ------
+    ValueError
+        If a required column can't be located in the header.
+    """
+    fields = [h.strip() for h in header_line.split(";")]
+    lower_fields = [f.lower() for f in fields]
+
+    def find(*needles: str) -> int:
+        for needle in needles:
+            for idx, f in enumerate(lower_fields):
+                if needle in f:
+                    return idx
+        raise ValueError(
+            f"Could not locate a header column matching any of {needles!r} "
+            f"in NAVAll.txt header: {fields}"
+        )
+
+    return {
+        "scheme_code": find("scheme code"),
+        "isin_growth": find("isin div payout", "isin growth"),
+        "isin_reinvestment": find("isin div reinvestment"),
+        "scheme_name": find("scheme name"),
+        "nav": find("net asset value"),
+        "nav_date": find("date"),
+    }
+
 
 def parse_nav_rows(content: str) -> pd.DataFrame:
     """
     Extract valid scheme rows from NAVAll.txt text and return a raw DataFrame.
 
+    Column positions are resolved dynamically from the file's header row
+    (first line containing "Scheme Code" and "Net Asset Value"), so the
+    parser survives AMFI inserting/reordering columns (e.g. the Plan/Option
+    columns added between Scheme Name and Net Asset Value). If no header is
+    found, falls back to the legacy fixed 6-field layout.
+
     Valid row criteria
     ------------------
     * Starts with digits (scheme_code).
     * Semicolon-separated.
-    * Contains at least 6 fields.
+    * Contains enough fields to cover every required column.
 
     Ignored rows
     ------------
     * Blank lines.
     * AMC / category header lines.
-    * Malformed lines with fewer than 6 fields.
+    * Malformed lines with too few fields.
 
     Parameters
     ----------
@@ -175,36 +242,54 @@ def parse_nav_rows(content: str) -> pd.DataFrame:
         Raw DataFrame with columns:
         scheme_code, isin_growth, isin_reinvestment, scheme_name, nav, nav_date
     """
-    COLUMNS = [
-        "scheme_code",
-        "isin_growth",
-        "isin_reinvestment",
-        "scheme_name",
-        "nav",
-        "nav_date",
-    ]
-
     records: list[dict] = []
     skipped = 0
+    header_map: Optional[dict[str, int]] = None
 
-    for line in content.splitlines():
-        line = line.strip()
+    for raw_line in content.splitlines():
+        line = raw_line.strip()
         if not line:
             continue
+
+        if header_map is None and "scheme code" in line.lower() and ";" in line:
+            try:
+                header_map = _build_header_map(line)
+                log.info("Detected NAVAll.txt header — column map: %s", header_map)
+            except ValueError as exc:
+                log.warning("Header row found but could not be parsed: %s", exc)
+            continue
+
         if not _SCHEME_ROW_RE.match(line):
             continue
 
         parts = line.split(";")
-        if len(parts) < 6:
-            skipped += 1
-            continue
 
-        records.append(dict(zip(COLUMNS, parts[:6])))
+        if header_map is not None:
+            required_idx = header_map.values()
+            if max(required_idx) >= len(parts):
+                skipped += 1
+                continue
+            record = {name: parts[idx] for name, idx in header_map.items()}
+        else:
+            # No header detected anywhere in the file — fall back to the
+            # legacy fixed-position layout.
+            if len(parts) < _LEGACY_FIELD_COUNT:
+                skipped += 1
+                continue
+            record = dict(zip(COLUMNS, parts[:_LEGACY_FIELD_COUNT]))
+
+        records.append(record)
 
     log.info("Parsed %d valid scheme rows (%d malformed lines skipped)", len(records), skipped)
 
     if not records:
         raise ValueError("No valid scheme rows found in NAVAll.txt — aborting.")
+
+    if header_map is None:
+        log.warning(
+            "No header row detected in NAVAll.txt — parsed using legacy fixed "
+            "6-field positions. Verify output if AMFI has changed the file layout."
+        )
 
     return pd.DataFrame(records, columns=COLUMNS)
 

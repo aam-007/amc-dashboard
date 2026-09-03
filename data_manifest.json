@@ -5,8 +5,8 @@
     "revenue": "data/exports/revenue/amc_revenue_latest.csv",
     "forecast_aum": "data/exports/forecasting/forecast_aum_latest.csv",
     "forecast_revenue": "data/exports/forecasting/forecast_revenue_latest.csv",
-    "nav_snapshot": "data/processed/nav/nav_snapshot_20260620_185807.csv",
-    "expense_ratio": "data/processed/expense_ratio/expense_ratio_clean_June_2026_20260620_185804.csv",
+    "nav_snapshot": "data/processed/nav/nav_snapshot_20260903_203643.csv",
+    "expense_ratio": "data/processed/expense_ratio/expense_ratio_clean_September_2026_20260903_203640.csv",
     "aum_processed": "data/processed/aum/aum_clean_January_March_2026_20260620_185719.csv"
   },
   "historical_files": {
@@ -30,6 +30,7 @@
       "amc_rankings_20260618_221544.csv",
       "amc_rankings_20260619_193258.csv",
       "amc_rankings_20260620_185850.csv",
+      "amc_rankings_20260903_203704.csv",
       "amc_rankings_latest.csv",
       "top_10_amcs_20260613_125917.csv",
       "top_10_amcs_20260615_130914.csv",
@@ -50,6 +51,7 @@
       "top_10_amcs_20260618_221544.csv",
       "top_10_amcs_20260619_193258.csv",
       "top_10_amcs_20260620_185850.csv",
+      "top_10_amcs_20260903_203704.csv",
       "top_10_amcs_latest.csv"
     ],
     "market_share": [
@@ -70,6 +72,7 @@
       "market_share_20260618_221544.csv",
       "market_share_20260619_193258.csv",
       "market_share_20260620_185849.csv",
+      "market_share_20260903_203703.csv",
       "market_share_latest.csv"
     ],
     "revenue": [
@@ -87,6 +90,7 @@
       "amc_revenue_20260618_221545.csv",
       "amc_revenue_20260619_193259.csv",
       "amc_revenue_20260620_185850.csv",
+      "amc_revenue_20260903_203704.csv",
       "amc_revenue_latest.csv",
       "revenue_validation_20260614_185111.csv",
       "revenue_validation_20260614_185343.csv",
@@ -104,6 +108,7 @@
       "revenue_validation_20260618_221546.csv",
       "revenue_validation_20260619_193300.csv",
       "revenue_validation_20260620_185851.csv",
+      "revenue_validation_20260903_203705.csv",
       "revenue_validation_latest.csv"
     ],
     "forecast": [
@@ -121,6 +126,7 @@
       "forecast_aum_20260618_221546.csv",
       "forecast_aum_20260619_193300.csv",
       "forecast_aum_20260620_185851.csv",
+      "forecast_aum_20260903_203705.csv",
       "forecast_aum_latest.csv",
       "forecast_revenue_20260615_114718.csv",
       "forecast_revenue_20260615_134232.csv",
@@ -136,6 +142,7 @@
       "forecast_revenue_20260618_221547.csv",
       "forecast_revenue_20260619_193301.csv",
       "forecast_revenue_20260620_185852.csv",
+      "forecast_revenue_20260903_203706.csv",
       "forecast_revenue_latest.csv"
     ],
     "nav_snapshot": [
@@ -158,7 +165,8 @@
       "nav_snapshot_20260618_220536.csv",
       "nav_snapshot_20260618_221504.csv",
       "nav_snapshot_20260619_193213.csv",
-      "nav_snapshot_20260620_185807.csv"
+      "nav_snapshot_20260620_185807.csv",
+      "nav_snapshot_20260903_203643.csv"
     ],
     "expense_ratio": [
       "expense_ratio_clean_June_2026_20260612_115721.csv",
@@ -177,9 +185,13 @@
       "expense_ratio_clean_June_2026_20260618_220533.csv",
       "expense_ratio_clean_June_2026_20260618_221502.csv",
       "expense_ratio_clean_June_2026_20260619_193210.csv",
-      "expense_ratio_clean_June_2026_20260620_185804.csv"
+      "expense_ratio_clean_June_2026_20260620_185804.csv",
+      "expense_ratio_clean_September_2026_20260903_202601.csv",
+      "expense_ratio_clean_September_2026_20260903_203640.csv"
     ],
     "aum_processed": [
+      "aum_clean_April_June_2026_20260903_202527.csv",
+      "aum_clean_April_June_2026_20260903_203607.csv",
       "aum_clean_January_March_2026_20260612_023555.csv",
       "aum_clean_January_March_2026_20260613_134048.csv",
       "aum_clean_January_March_2026_20260615_130022.csv",
@@ -203,8 +215,8 @@
     ]
   },
   "metadata": {
-    "last_run": "20 Jun 2026 18:58:52 IST",
+    "last_run": "03 Sep 2026 20:37:06 IST",
     "amc_count": 51,
-    "scheme_count": 14219
+    "scheme_count": 14332
   }
 }

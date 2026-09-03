@@ -74,6 +74,10 @@ _RE_OPT_IDCW = re.compile(
 )
 _RE_OPT_BONUS = re.compile(r"\bBONUS\b", re.IGNORECASE)
 
+# Legacy fixed field layout (used only if no header row is detected):
+# code;isin_g;isin_r;name;nav;date
+_LEGACY_FIELDS = ["scheme_code", "isin_growth", "isin_reinvestment", "scheme_name", "nav", "nav_date"]
+
 
 # ---------------------------------------------------------------------------
 # Step 1 – Download
@@ -200,6 +204,54 @@ def _is_amc_header(line: str) -> bool:
     return True
 
 
+def _build_column_map(header_line: str) -> dict[str, int]:
+    """
+    Map logical field names to their positional index in the NAVAll.txt
+    column header row.
+
+    AMFI has changed this layout before (inserting ``Plan`` / ``Option``
+    columns between Scheme Name and Net Asset Value), which silently
+    breaks a parser that assumes fixed positions. Matching by header text
+    instead of a hardcoded index makes parsing resilient to that.
+
+    Parameters
+    ----------
+    header_line : str
+        Raw header line, semicolon-separated.
+
+    Returns
+    -------
+    dict[str, int]
+        Logical field name -> index into each data row's split fields.
+
+    Raises
+    ------
+    ValueError
+        If a required column can't be located.
+    """
+    fields = [h.strip() for h in header_line.split(";")]
+    lower_fields = [f.lower() for f in fields]
+
+    def find(*needles: str) -> int:
+        for needle in needles:
+            for idx, f in enumerate(lower_fields):
+                if needle in f:
+                    return idx
+        raise ValueError(
+            f"Could not locate a header column matching any of {needles!r} "
+            f"in NAVAll.txt header: {fields}"
+        )
+
+    return {
+        "scheme_code": find("scheme code"),
+        "isin_growth": find("isin div payout", "isin growth"),
+        "isin_reinvestment": find("isin div reinvestment"),
+        "scheme_name": find("scheme name"),
+        "nav": find("net asset value"),
+        "nav_date": find("date"),
+    }
+
+
 def parse_navall(content: str) -> pd.DataFrame:
     """
     Parse raw NAVAll.txt content into a DataFrame.
@@ -207,6 +259,12 @@ def parse_navall(content: str) -> pd.DataFrame:
     State machine:
       - Tracks ``current_category`` and ``current_amc`` as context.
       - Emits one record per valid scheme row.
+
+    Column positions (scheme_code, isins, scheme_name, nav, nav_date) are
+    resolved dynamically from the file's header row when present, so the
+    parser survives AMFI inserting/reordering columns (e.g. the Plan/Option
+    columns added between Scheme Name and Net Asset Value). Falls back to
+    the legacy fixed 6-field layout if no header row is found.
 
     Parameters
     ----------
@@ -224,12 +282,22 @@ def parse_navall(content: str) -> pd.DataFrame:
     skipped = 0
     current_category: str = ""
     current_amc: str = ""
+    column_map: Optional[dict[str, int]] = None
 
     for lineno, raw_line in enumerate(content.splitlines(), start=1):
         line = raw_line.strip()
 
         # Skip empty lines
         if not line:
+            continue
+
+        # ----- Column header row (defines field positions) -----
+        if column_map is None and line.lower().startswith("scheme code") and ";" in line:
+            try:
+                column_map = _build_column_map(line)
+                log.info("Detected NAVAll.txt header — column map: %s", column_map)
+            except ValueError as exc:
+                log.warning("Header row found but could not be parsed: %s", exc)
             continue
 
         # ----- Category header -----
@@ -241,19 +309,30 @@ def parse_navall(content: str) -> pd.DataFrame:
         # ----- Scheme row -----
         if _RE_SCHEME_ROW.match(line):
             parts = [p.strip() for p in line.split(";")]
-            if len(parts) < 6:
-                log.debug("Line %d: malformed scheme row (fields=%d) — skipped.", lineno, len(parts))
-                skipped += 1
-                continue
+
+            if column_map is not None:
+                required_idx = column_map.values()
+                if max(required_idx) >= len(parts):
+                    log.debug("Line %d: malformed scheme row (fields=%d) — skipped.", lineno, len(parts))
+                    skipped += 1
+                    continue
+                field = {name: parts[idx] for name, idx in column_map.items()}
+            else:
+                if len(parts) < len(_LEGACY_FIELDS):
+                    log.debug("Line %d: malformed scheme row (fields=%d) — skipped.", lineno, len(parts))
+                    skipped += 1
+                    continue
+                field = dict(zip(_LEGACY_FIELDS, parts))
+
             try:
                 records.append(
                     {
-                        "scheme_code": parts[0],
-                        "isin_growth": parts[1] if parts[1] not in ("", "-") else None,
-                        "isin_reinvestment": parts[2] if parts[2] not in ("", "-") else None,
-                        "scheme_name": parts[3],
-                        "nav": parts[4],
-                        "nav_date": parts[5],
+                        "scheme_code": field["scheme_code"],
+                        "isin_growth": field["isin_growth"] if field["isin_growth"] not in ("", "-") else None,
+                        "isin_reinvestment": field["isin_reinvestment"] if field["isin_reinvestment"] not in ("", "-") else None,
+                        "scheme_name": field["scheme_name"],
+                        "nav": field["nav"],
+                        "nav_date": field["nav_date"],
                         "amc_name": current_amc,
                         "category": current_category,
                     }
@@ -275,6 +354,13 @@ def parse_navall(content: str) -> pd.DataFrame:
         len(records),
         skipped,
     )
+
+    if column_map is None:
+        log.warning(
+            "No header row detected in NAVAll.txt — parsed using legacy fixed "
+            "6-field positions. Verify output if AMFI has changed the file layout."
+        )
+
     return pd.DataFrame(records)
 
 
