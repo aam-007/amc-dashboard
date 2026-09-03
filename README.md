@@ -437,7 +437,7 @@ As of the last recorded run, the warehouse held **51 AMCs** and **14,214 schemes
 ## Author
 
 **Aditya Mishra**
-MBA Tech, Data Science & Finance — NMIMS-MPSTME, Mumbai
+MBA Tech, Data Science & Mgmnt — NMIMS-MPSTME, Mumbai
 
 aditya.mishra10@nmims.in 
 
